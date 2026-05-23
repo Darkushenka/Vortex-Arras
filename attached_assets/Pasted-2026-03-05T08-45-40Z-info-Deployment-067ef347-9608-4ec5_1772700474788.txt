@@ -1,0 +1,43 @@
+2026-03-05T08:45:40Z info: Deployment: 067ef347-9608-4ec5-aa41-8c2d5f35cc34
+2026-03-05T08:45:40Z info: Build: 6af1f26b-16b5-4579-937b-75eebe532852
+2026-03-05T08:45:40Z info: Running Security Scan
+2026-03-05T08:45:55Z info: Security Scan Complete
+2026-03-05T08:45:55Z info: Connecting to builder
+2026-03-05T08:45:56Z info: Builder connected
+2026-03-05T08:45:58Z info: Installing packages
+2026-03-05T08:45:59Z info: Starting Build
+Error: Cannot find module './ValidationError'
+Require stack:
+- /home/runner/workspace/node_modules/webpack/node_modules/schema-utils/src/validateOptions.js
+- /home/runner/workspace/node_modules/webpack/node_modules/schema-utils/src/index.js
+- /home/runner/workspace/node_modules/webpack/lib/ProgressPlugin.js
+- /home/runner/workspace/node_modules/webpack-stream/index.js
+- /home/runner/workspace/gulpfile.js
+- /home/runner/workspace/node_modules/gulp-cli/lib/shared/require-or-import.js
+- /home/runner/workspace/node_modules/gulp-cli/lib/versioned/^4.0.0/index.js
+- /home/runner/workspace/node_modules/gulp-cli/index.js
+- /home/runner/workspace/node_modules/gulp/bin/gulp.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    at Module._load (node:internal/modules/cjs/loader:1038:27)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/home/runner/workspace/node_modules/webpack/node_modules/schema-utils/src/validateOptions.js:15:25)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/home/runner/workspace/node_modules/webpack/node_modules/schema-utils/src/validateOptions.js',
+    '/home/runner/workspace/node_modules/webpack/node_modules/schema-utils/src/index.js',
+    '/home/runner/workspace/node_modules/webpack/lib/ProgressPlugin.js',
+    '/home/runner/workspace/node_modules/webpack-stream/index.js',
+    '/home/runner/workspace/gulpfile.js',
+    '/home/runner/workspace/node_modules/gulp-cli/lib/shared/require-or-import.js',
+    '/home/runner/workspace/node_modules/gulp-cli/lib/versioned/^4.0.0/index.js',
+    '/home/runner/workspace/node_modules/gulp-cli/index.js',
+    '/home/runner/workspace/node_modules/gulp/bin/gulp.js'
+  ]
+}
+
