@@ -1,0 +1,6144 @@
+/*jslint node: true */
+/*jshint -W061 */
+/*global goog, Map, let */
+/*jshint esversion: 6 */
+"use strict";
+
+// General requires
+var _this = void 0;
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
+function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == _typeof(e) || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+require('google-closure-library');
+goog.require('goog.structs.PriorityQueue');
+goog.require('goog.structs.QuadTree');
+
+// Import game settings.
+var c = require('../../config.json');
+
+// Import utilities.
+var util = require('./lib/util');
+var ran = require('./lib/random');
+var hshg = require('./lib/hshg');
+
+// Let's get a cheaper array removal thing
+Array.prototype.remove = function (index) {
+  if (index === _this.length - 1) {
+    return _this.pop();
+  } else {
+    var r = _this[index];
+    _this[index] = _this.pop();
+    return r;
+  }
+};
+
+// Define player keys
+var keys = ['k', 'l', 'TOKEN_KYaPZYAL2vh1yvSYYeZyH6US5bTbOGl_TOKEN',
+// Focus Group
+'ZNr3GBQOhD2CDDYpZD3JZkZ6hmhoF4wGiTYTikZlSLr1Z66yWKuVMitRkpUbPy6s',
+// Mine
+'HKib09Ep3hIcwFXpiCj5iEkpLBN88HQ22hiFqg5alcxn4AYl6VcsPFTqMvllLt1D',
+// Parodia
+'n9hx8iQH8453dWQpdDvJcAvPzQej80xQz86TxuYaJ8CaOr4hEH2zHPlSeayVPjFZ',
+// SGM
+'5piWwi06VXdEuOsz1rbcHiglurbaYIPtslIgE0NNMGQgNcqErdJ4kUVYpDJsRlVC',
+// Aznaft
+'q80UgWYIQVM2oZW5iQO6VRdLcOTuHkSgUx4U7NN8z76Ltgj7gVc6tSWvmpPkRUGH',
+// Licht
+'9zcVcKxiv60ZoBr6CaO9ecjR3i0Mj9yx4Qgt9IGwzxps8Q5ge1GQJiYe59GBxKip',
+// Tenderlicious
+'M67ZAZIgboiBcUtcKoHOuwXlQJWN9DEwhr0CIqR9xjiwpDyb4cUrwUIynKnuQmrU',
+// ManticoreKiller
+'iBKZrtZEP6Gq1m1y4hpbIH2htBKegkaj6eyO70L9FMAEydiV4gA4ufiLWFx0R5C2',
+// JB Columbia
+'zbH5Myv66HmR9Mda39xlLXa9TyBGzXnKZV7xpN5NCDTXorn52123eHY4kcZmPNLx',
+// Teal Knight
+'pee4OZmPo9yrINv30kIMMVviEr1PRfiuIYQEOGXTK6lnLZumy9O942NabE8BiEce',
+// unnamed
+'08IhobFLBYah8Mk8MKqqG6W576iS4jznjK4WnIsSzcFC0OhkIY51DQV0DWWsgfbg',
+// Pie
+'36spA3cA2FNDamjM4SaiNNfNMkUMSERgduUvAL3Ms8bsioX4uoMyQteMWx1dRpdp',
+// Sergio
+'i3tpmHTC2ty8CCzjhISDKO1MrkZOwmoWZ08XZLOg3IfCqbtAsdC8QPKPMhbPHQmV',
+// Corrupt X
+'gQHpJkeGoxknxqkiX9msLhwS1NzikXa1RiOKOJD2o2zf15XL35P1YWZeMcivXLNB',
+// Jorjito Gamer
+'kKWsRf0OdLWzipECohr5FqjuyecPZYOGxl1zAXabtllaWx2OVKfLTKBiit8KVg5j',
+// warrior
+'77L1QgQgsTQrZHhTSuv1iK1NyvpBL9AYyvmkF21Sjp4T7ldxGodQnC9dM1YtvZzG',
+// TTTank
+'M6I9vmmRiitxg07rBG2IuC7aNpp7LHQGVPtwGfkk3hIBR0jhlWwaqzpzPXqU2awM',
+// CX
+'5AxKhPIu5jF3B3cIxjA2BHUy30ccYgEUXJmK16ksJotp9D9WVlY6QqPLDPGim1MK',
+// Faxaro
+'kcrJTPqvhraysgCNrFZORGNR4UTMRvbQ2zuhI3iXpGyMg6wDtU5QMgcV8vNdLLHQ',
+// Mipha
+'EXoiZYDuwSwmp7Zg0m7hdaLyv2PMbQgQorkwRznC0NC3saubVNtxVUGtOWZ2xdcz',
+// svorlds
+'G0t2lQYeaTHHU8sp5ibNjFCCLMr41cPCOJRKUC5eUGfkUKDxpVwo5azomBSznZuR',
+// FTM
+'kf2VcjtzpMvVwhlgIjq4MX6LWbIoNzcvfsxARS0qWiuVWf6BPPsQ2p1FgBVvNoB1',
+// pnvv / Cannon Man
+'3hO6R7AOR0aiiFuRyGaHKrgJHjTEpsD2LZ866bhvlz2Ru9AT8QmiBNf5PZuXCFIA',
+// wowie's friend
+'z272UlNODnYVK79jva6pybRpwtp1h0FdJh8F8JRQJ5VY9lPrcugp6nd403Op4voC', 'eOb4DCk81Hzay8Kgjcu6tbbpIUCveloxahmnkmg3aU6FlvdWjJd2Uui5cFQdsnby', '9qGqNv5iYTSIhkCaMmZpvYhSpaLnHQJnj6m2gdoVWIXgLaFgIrbcFYHM8bcBsGYS', 'qqWz1E1uVtErG4N80YDVQJywzOk6PJFDrC6uzqoQ9XL2nNrCCr1KvY8XUEyCroHT', 'r0KXqfIifiavtqP3v0b5gqb5ArQY5sJWO7fjG4P6AFE5MRyfjDGK7sO7nXg23Tkv', 'nUzNolF4Yys4ua6x78GiVH0Fparcm8GyD60IZzVHji0b2gQL3citWEEi3b1J9iRT', 'XSxFurVLlc7o99nnakK5EPA2Z16tqBxP3xKcq5y4XOjRyfFRqaSxbBNRUtab71FH', 'uYLfr6k6wEmgMtGVna366Gujor3gUWhWUHgbsz2uUNhQ8OKkwzb1IpDehnz7dfFL', 'TVA4eYx29geFN6kb2Osyt5veaih0OOJG2MzB4qBBlUQr5CpRJqIhrTModxcT5NXI', 'eyQqQE0h0l6x7XpkXpnZdYPsRJgvdl6L8xAoEzF0ZGlTV8HH0wUePj03LuULDhSN', 'ZuOzwoZw4lCWwekTMh9bEAw4Tv92uLhzGN0DMDV2Rk7Sfn3Hsbf87ssHcvxTbDek',
+// Public
+'PUBLICRSUZbhCMu2ocDrhtje1ev6ff3eM6IxsCPUBLIC', 'PUBLICb7HbKa0zFp5PzJVkcu17GIbp56JeHxZlPUBLIC', 'PUBLICwxTybWuUrYfEA84kVunN5btV4vROYCW0PUBLIC', 'PUBLICfOKBjTZzW1VvoEfJTY3G7U2TcwT8iREyPUBLIC', 'PUBLICKKRLO0lpLy2IDHUdqzE0MBsZUhrBnYRpPUBLIC', 'PUBLICsC7wKFQ6CXPB241uA5RzORP2Z14CSO86PUBLIC', 'PUBLIC6criSrXdLBoTtIWQHCmcOPfzqgDZcGOiPUBLIC', 'PUBLIC3QdiZpPEAtB4gif0TEU3822qJz3W23J2PUBLIC', 'PUBLICEDZLxLjRRfa8tS5EqRIExtHpWq0MJSVZPUBLIC', 'PUBLIC5vmCtP1IjDnglKJk7AmWg3hAuZ4ZGGnVPUBLIC', 'PUBLICe1r6NsdjhOnpNuPqnskTzLvJoaXn3dsqPUBLIC', 'PUBLICTbfzA0MB2H6hRataGEQENmu1o9eOpytkPUBLIC', 'PUBLICpJlxtdn2iplYuIWXznUX3f6RHHPC3uFrPUBLIC', 'PUBLICadVvUN4mp0MTSAnsc3BKIJ6l40Y5sV00PUBLIC', 'TRUSTED5vmCtP1IjDnglKJk7sAmWg3hAuZ4ZGGnVTRUSTED', 'TRUSTEDe1r6NsdjhOnpNuPqnskTfzLvJoaXn3dsqTRUSTED', 'TRUSTEDTbfzA0MB2H6hRataGE3QENmu1o9eOpytkTRUSTED', 'TRUSTEDpJlxtdn2iplYuIWXsznUX3f6RHHPC3uFrTRUSTED', 'TRUSTEDadVvUN4mp0MTSAnsc3BKfIJ6l40Y5sV00TRUSTED', 'TRUSTED3nYR28Kwhnx1n6JvP4Tm r2dxLhrTvrcNTRUSTED', 'TRUSTEDNwHIdUtjLSmITUVNg5B6c4uVWiB7IFq2STRUSTED', 'TRUSTEDDIIocNBJS9mYstVFSuiwNxbQeEXOFlrPhTRUSTED', 'TRUSTED17rtKXqQ7wzek6Ejf9rGCfOdRr5vrm5AxTRUSTED', 'TRUSTEDWJkuJFZ2Wljq2WXasxHrM0Vsbra5iyb6vTRUSTED', 'TRUSTEDzxVdPsuU1yGRQrkbADH6rBaE8TKdAvJabTRUSTED', 'TRUSTED7nAZ3NBi9ZB07KfLV0cnGO0YEXoSGf1lLTRUSTED', 'TRUSTEDFyJTLBCrokyoFICQFi4hAGJd09jkCDqOJTRUSTED', 'TRUSTEDPBHbBZkW9foaXPDfGe6xq9Y6XvJhrwowqTRUSTED', 'TRUSTEDtTZe5CYcmmCQBLj0WztAHn5MnI0dhqNrXTRUSTED', 'GUDPOSTERNwR7FWcY1eeNkyiCrzGfuo3wGWhETFmbGUDPOSTER', 'GUDPOSTERR2gdw10L7u4auP3yr1G1EC59TnRA3H31GUDPOSTER', 'GUDPOSTERVLX8LwHtMrLIMFx0XdzTdauVAmSKV9SZGUDPOSTER', 'GUDPOSTER8Uk4cGa2ut3vFfaPmjbmRBtAXpFHXsBNGUDPOSTER', 'GUDPOSTERdHHy9pqMejwGZJ7nUZMRw0Mnc1g8UJ8oGUDPOSTER', 'GUDPOSTERrgZPXqFSJXdChEMvgQjjxjGZfsObOArCGUDPOSTER', 'GUDPOSTERysJI3BfzB2cRCDDdFkAaFWxZk5TNHwfvGUDPOSTER', 'GUDPOSTERlFps80nCJ6cnFGjyH9QoKqgETwGX1sIQGUDPOSTER', 'GUDPOSTERmED6CZg213gXoCYyDqxMLGFtuuCPn8NmGUDPOSTER', 'GUDPOSTERlSL92YPpoqh48GuQwydpGuocJAH6Vx5VGUDPOSTER', 'GIVEAWAYZ1yVvobK3MWgCBxYjFheJd3UrWW2ULJuGIVEAWAY', 'GIVEAWAYaVGcMBm3LwxmLkxxGSt6NNg9AUDsj5v5GIVEAWAY', 'GIVEAWAYAMkJmX3xKv3tiieS5oAfEsJbni4xInIwGIVEAWAY', 'GIVEAWAYi3AbdptFr9m2fGGqY9p6Vvi3uRX6ALHRGIVEAWAY', 'GIVEAWAYxwABlNSPU4291UJICWyeXQB4ET0ZyA0uGIVEAWAY', 'GIVEAWAYczPSwYnpHDGKaimREjN1e86N6CmSH0NWGIVEAWAY', 'GIVEAWAYDx3U7MOBNyDmjv6Rz6Le6wgG4Xk0cwilGIVEAWAY', 'GIVEAWAYCOr2yK7od6RRch52ToBO5s0xxizBVVajGIVEAWAY', 'GIVEAWAYV7fiIzckU8xQ57i3Bu8ngWetPOzS9ktvGIVEAWAY', 'GIVEAWAYpbo21yNoMcvwhbIeMOsqMIjzYKOLZyEgGIVEAWAY',
+// Twitter
+'500kBomberContestTokenVUBefeRUMQsLShjas4dhfSF', '500kBomberContestTokenNSEefeRUMQsLShjbs4dhfSF',
+// TnT
+'500kBomberContestTokenWDWefeRUMQsLShjcs4dhfSF',
+// crnz
+'500kPoacherContestTokenZZb1FkYER7B0ZV7bs9df8s', '500kAutoDoubleContestTokenKBSj41qloynOGws87X2',
+// JeShAn
+'500kFortressContestTokenl2fd42tL7C6ZynSDF33ox',
+// Lucario
+// Youtube
+'SGMTokenGiveaway51NP3JOh9NKvsnVh6PDRGI1wALGXWLzE2jZXztWKxlyPN00w', 'SGMTokenGiveaway2puyw4VGFTTSqgxeFvvvqxMTzZ5S3XPtVQXLCSIOpW7Rxv8m', 'SGMTokenGiveawayYAu4abk9oLMaBqOXfx2QvSqznNqw7mTFv7lBFk5LJ7ksPd7W', 'SGMTokenGiveawaybgSA5xNNpo4Vhsfg8lOlop8f4FOPWk9VXcMvjl62JYWhKOWF', 'SGMTokenGiveawaya7C7vBTBPxgWEgg1g3UbYttE30A33aFVqEEd2pdV3PfbxvA0', 'SGMTokenGiveawayBFu7eKC22KxKYuFiUTOyjmMCpBhr1HseP7pNo4yl5xOZt9IS', 'SGMTokenGiveawayAHVq7eEAUWZzCtK4vcHslWIDMPykPAfsnq4jdsHYE3HIhlBO', 'SGMTokenGiveawayS0wxtOYFcnBirWbbP9EePvgo8rPVrhatpixkaH78CdKdtorr', 'SGMTokenGiveaway7p8JwRnATdS3H10gIKy5dKQXlbj93WplkC9NpfjNTREG9IQn', 'SGMTokenGiveawaynM1ffqsEM31Vv6KMmlxhs6Ug0s65FiyN3w9eP6QM7FmpbS2i', 'SGMTokenAa05Q1oDwf0Mxaw57vBTBPX3M25gjitRD0daHTObk796GqSJ3KUhKf5p', 'SGMTokenxg3Kw7jPUoxFOXbO4POF19iovCUnNzqoQ9XL2rTAoXoAtyHDZR5YFgAk', 'SGMToken7KteCaOERDa8TkfzIQIm54rhewlKL2lWIDMPykPAfsnq41MGxgogphB9', 'OMTokenIGnPS8RSGiP8lvTQDdve9ANPfSOyTgvPQMYdFlcn7IVcJg8oeGreEBYs', 'OMTokenLTARU3UJldlHUf8215Wg4AbdThRvA3j0wG2FbwyZCTixkaH78CdK8BnV', 'OMToken7sOXlNs9Qu58TmaCu9TpD4JkzRuGrKKOS74tZimimR8Iu5du7v6GRbRH', 'JBColombiaTokenwZXpYskkovgQL4jZlqS42xaqgVAvHZPZgVcccsBkHhsXhq69', 'JBColombiaToken8WwiA5demyL1gQZ9D5kvFMOwkJRc3STikct22cMoPmjfli69', 'JBColombiaTokenPDuZydKLePKQ9TyOMqiquI0YVHcCJBJb3pORyzfo42nHhT69', 'JBColombiaTokeniC0Eh8jMoncX4bAKbslR174tZimimBXoUGhvaKY0dBwbLI69', 'JBColombiaTokenWWqX44i7VqxtQB3qsViJHbJnK3FryxqgAAFerRFxYO2wJc69', 'JBColombiaTokenlzgPyfwuto7KY8BqxDserADmpeuMR31wxgD0dWpNWvHZv969', 'SMTokenlSrBG8RTazOHzZ6zeyBPFI1tOSiuDSJNcfozraRKb8votLtwmNFC964KG', 'SMTokennrNg7MzqzJe2xz11cKDETqCBKVhDiOS6x1gyTMV8EHLkRGGFXAHLUVUjk', 'SMTokenfjlzipOhA8Lfp38kt9FnzGKRg6g79hujlFVPbEyzsbEqbYOD2ohveMSh8', 'SMTokenNHPtbYKUDrR8MBQoQIymCwdbFSoHHNTuBMPvS4iugQigBMvfrGurB3qM4', 'SMTokenI33BqYnppCCVAMOkykIeOWIsmetgkymFK1A7XgeZGGW52xVq1xRKv38vC', 'SMTokenHxNBGJGRf6SqXAOIhgMEOuPUp4X4LszwBEeco3Wrw2IuOe3jxoWyLKdR0', 'SMTokennjophXq0WC3jzDpPrDbfXLE2eoFOMvQWKucR0ZwECIlXDBTQnF33uyDXd',
+// Patreon / rewards
+'tokenlordkarma88tokenlordkarma88tokenlordkarma88tokenlordkarma88', 'hereIsUrTokenBuddyThxForTheOverGunnerLmao', 'DukeonkledDukeonkleThankYouSoMuch123e911DukeonkledDukeonkledDuke', 'FireNationFireNationThanksATon018s380280FireNationFireNationFire', 'rewardTokenJSdf323H0Cj85aVOG3SPlgp7Y9BuBoFcwpmNFjfLEDQhOFTIpukdr',
+// Call
+'rewardTokenDg2JDTp0rxDKXIPE8PHcmdHqWyH2CqPqpcAf6QcT8m2hgBZnJ7KHE', 'rewardTokenad3JTsTwuVLkQvfmVH2d2Ukbf8WbFuPBqTpYFdFx9AuZEnmv9EW8U', 'rewardTokenJsa43Tthn1M5Ey9oDRODzzrazqRxL28cTchgInjVCrSfnWEATdYeP', 'rewardTokensdfsJTyz2YMS3GLDfD2NvqXK46p1ScsmdLxI1owBkjHw983lwkR8Z',
+// Wiki
+'WIKIREWARDV7V0bZRP8lM3fUvwuAX7DC5FpZCU1AyJByaulkH9YHZ7WIKIREWARD', 'WIKIREWARDDOE8Iqg5K124sNXSR51WWycmCnFtCLjyF7uole5sgQgoWIKIREWARD', 'WIKIREWARD5z5xXA0flzxeRgGu6EjSWlOq23gdGoYALClfsUT143Y9WIKIREWARD', 'WIKIREWARD4DTEvdwSBKPBRCAJxeS9surL09uzxx33gAHmMYFldRsMWIKIREWARD', 'WIKIREWARDqGXxMucMJcSeqWFcAfCLVNStnmOezkzOUot8xbfpCuk1WIKIREWARD', 'EDITOR1eKAAURvtnHYFuUz6dzPqOwPt6SFWbacEucDnm8KroabolnzLZrdEDITOR', 'EDITOR38Gi67EFmLdh6nXuKqtRc79HKk34c6bQl08tbUeZlGcxBS2c350yEDITOR', 'EDITOR7mAKjd6XYprdtvbWqqUjEEfCqomx67aLSyG70eiFuvRVv2Eest27EDITOR', 'EDITORoNzv0DxKzLYY7YCYdIsRHdNz8DNNiuqI2I9mBM2blBpWZ39chumsEDITOR', 'EDITOR399V1FLGtsne5BMg5QfeeHdR63bxkV51Av0ET3F5y92q7EMhI8R3EDITOR', 'EDITORmUJbmoFVshllWIUb11kyXxQfyESa4t3SYcGRHSlWzLrzfwkHCIVUEDITOR',
+// Themes
+'YouAreTheCreatorOfBadlands', 'WowYouMadeADopeFishyTheme', 'ThanksForHelpingPlantAForest', 'MidnightIsSuperCoolNotYouTheTheme', 'DrinkBleachPlz', 'FrostyAndBeautifulJustLikeYourColdHeart'];
+if (!c.TOKEN_REQUIRED) {
+  keys.push("");
+}
+
+// Set up room.
+global.fps = "Unknown";
+var roomSpeed = c.gameSpeed;
+var room = {
+  lastCycle: undefined,
+  cycleSpeed: 1000 / roomSpeed / 30,
+  width: c.WIDTH,
+  height: c.HEIGHT,
+  setup: c.ROOM_SETUP,
+  xgrid: c.X_GRID,
+  ygrid: c.Y_GRID,
+  gameMode: c.MODE,
+  skillBoost: c.SKILL_BOOST,
+  scale: {
+    square: c.WIDTH * c.HEIGHT / 100000000,
+    linear: Math.sqrt(c.WIDTH * c.HEIGHT / 100000000)
+  },
+  maxFood: c.WIDTH * c.HEIGHT / 100000 * c.FOOD_AMOUNT,
+  isInRoom: function isInRoom(location) {
+    return location.x < 0 || location.x > c.WIDTH || location.y < 0 || location.y > c.HEIGHT ? false : true;
+  },
+  topPlayerID: -1
+};
+room.findType = function (type) {
+  var output = [];
+  var j = 0;
+  room.setup.forEach(function (row) {
+    var i = 0;
+    row.forEach(function (cell) {
+      if (cell === type) {
+        output.push({
+          x: (i + 0.5) * room.width / room.xgrid,
+          y: (j + 0.5) * room.height / room.ygrid
+        });
+      }
+      i++;
+    });
+    j++;
+  });
+  room[type] = output;
+};
+room.findType('nest');
+room.findType('norm');
+room.findType('bas1');
+room.findType('bas2');
+room.findType('bas3');
+room.findType('bas4');
+room.findType('roid');
+room.findType('rock');
+room.nestFoodAmount = 1.5 * Math.sqrt(room.nest.length) / room.xgrid / room.ygrid;
+room.random = function () {
+  return {
+    x: ran.irandom(room.width),
+    y: ran.irandom(room.height)
+  };
+};
+room.randomType = function (type) {
+  var selection = room[type][ran.irandom(room[type].length - 1)];
+  return {
+    x: ran.irandom(0.5 * room.width / room.xgrid) * ran.choose([-1, 1]) + selection.x,
+    y: ran.irandom(0.5 * room.height / room.ygrid) * ran.choose([-1, 1]) + selection.y
+  };
+};
+room.gauss = function (clustering) {
+  var output;
+  do {
+    output = {
+      x: ran.gauss(room.width / 2, room.height / clustering),
+      y: ran.gauss(room.width / 2, room.height / clustering)
+    };
+  } while (!room.isInRoom(output));
+};
+room.gaussInverse = function (clustering) {
+  var output;
+  do {
+    output = {
+      x: ran.gaussInverse(0, room.width, clustering),
+      y: ran.gaussInverse(0, room.height, clustering)
+    };
+  } while (!room.isInRoom(output));
+  return output;
+};
+room.gaussRing = function (radius, clustering) {
+  var output;
+  do {
+    output = ran.gaussRing(room.width * radius, clustering);
+    output = {
+      x: output.x + room.width / 2,
+      y: output.y + room.height / 2
+    };
+  } while (!room.isInRoom(output));
+  return output;
+};
+room.isIn = function (type, location) {
+  if (location.x == null || location.y == null || isNaN(location.x) || isNaN(location.y)) {
+    throw "InvalidPositionError";
+  }
+  if (room.isInRoom(location)) {
+    var a = Math.floor(location.y * room.ygrid / room.height);
+    var b = Math.floor(location.x * room.xgrid / room.width);
+    return type === room.setup[a][b];
+  } else {
+    return false;
+  }
+};
+room.isInNorm = function (location) {
+  if (room.isInRoom(location)) {
+    var a = Math.floor(location.y * room.ygrid / room.height);
+    var b = Math.floor(location.x * room.xgrid / room.width);
+    var v = room.setup[a][b];
+    return v !== 'nest';
+  } else {
+    return false;
+  }
+};
+room.gaussType = function (type, clustering) {
+  var selection = room[type][ran.irandom(room[type].length - 1)];
+  var location = {};
+  do {
+    location = {
+      x: ran.gauss(selection.x, room.width / room.xgrid / clustering),
+      y: ran.gauss(selection.y, room.height / room.ygrid / clustering)
+    };
+  } while (!room.isIn(type, location));
+  return location;
+};
+util.log(room.width + ' x ' + room.height + ' room initalized.  Max food: ' + room.maxFood + ', max nest food: ' + room.maxFood * room.nestFoodAmount + '.');
+
+// Define a vector
+var Vector = /*#__PURE__*/function () {
+  function Vector(x, y) {
+    _classCallCheck(this, Vector);
+    //Vector constructor.
+    this.x = x;
+    this.y = y;
+  }
+  return _createClass(Vector, [{
+    key: "update",
+    value: function update() {
+      this.len = this.length;
+      this.dir = this.direction;
+    }
+  }, {
+    key: "length",
+    get: function get() {
+      return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
+    }
+  }, {
+    key: "direction",
+    get: function get() {
+      return Math.atan2(this.y, this.x);
+    }
+  }]);
+}();
+function nullVector(v) {
+  v.x = 0;
+  v.y = 0; //this guy's useful
+}
+
+// Get class definitions and index them
+var Class = function () {
+  var def = require('./lib/definitions'),
+    i = 0;
+  for (var k in def) {
+    if (!def.hasOwnProperty(k)) continue;
+    def[k].index = i++;
+  }
+  return def;
+}();
+
+// Define IOs (AI)
+function nearest(array, location) {
+  var test = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function () {
+    return true;
+  };
+  var list = new goog.structs.PriorityQueue();
+  var d;
+  if (!array.length) {
+    return undefined;
+  }
+  array.forEach(function (instance) {
+    d = Math.pow(instance.x - location.x, 2) + Math.pow(instance.y - location.y, 2);
+    if (test(instance, d)) {
+      list.enqueue(d, instance);
+    }
+  });
+  return list.dequeue();
+}
+function timeOfImpact(p, v, s) {
+  // Requires relative position and velocity to aiming point
+  var a = s * s - (v.x * v.x + v.y * v.y);
+  var b = p.x * v.x + p.y * v.y;
+  var c = p.x * p.x + p.y * p.y;
+  var d = b * b + a * c;
+  var t = 0;
+  if (d >= 0 && Math.abs(a) > 1e-6) {
+    t = Math.max(0, (b + Math.sqrt(d)) / a);
+  }
+  if (!isFinite(t)) t = 0;
+  return t * 0.9;
+}
+var IO = /*#__PURE__*/function () {
+  function IO(body) {
+    _classCallCheck(this, IO);
+    this.body = body;
+    this.acceptsFromTop = true;
+  }
+  return _createClass(IO, [{
+    key: "think",
+    value: function think() {
+      return {
+        target: null,
+        goal: null,
+        fire: null,
+        main: null,
+        alt: null,
+        power: null
+      };
+    }
+  }]);
+}();
+var io_doNothing = /*#__PURE__*/function (_IO) {
+  function io_doNothing(body) {
+    var _this2;
+    _classCallCheck(this, io_doNothing);
+    _this2 = _callSuper(this, io_doNothing, [body]);
+    _this2.acceptsFromTop = false;
+    return _this2;
+  }
+  _inherits(io_doNothing, _IO);
+  return _createClass(io_doNothing, [{
+    key: "think",
+    value: function think() {
+      return {
+        goal: {
+          x: this.body.x,
+          y: this.body.y
+        },
+        main: false,
+        alt: false,
+        fire: false
+      };
+    }
+  }]);
+}(IO);
+var io_moveInCircles = /*#__PURE__*/function (_IO2) {
+  function io_moveInCircles(body) {
+    var _this3;
+    _classCallCheck(this, io_moveInCircles);
+    _this3 = _callSuper(this, io_moveInCircles, [body]);
+    _this3.acceptsFromTop = false;
+    _this3.timer = ran.irandom(10) + 3;
+    _this3.goal = {
+      x: _this3.body.x + 10 * Math.cos(-_this3.body.facing),
+      y: _this3.body.y + 10 * Math.sin(-_this3.body.facing)
+    };
+    return _this3;
+  }
+  _inherits(io_moveInCircles, _IO2);
+  return _createClass(io_moveInCircles, [{
+    key: "think",
+    value: function think() {
+      if (!this.timer--) {
+        this.timer = 10;
+        this.goal = {
+          x: this.body.x + 10 * Math.cos(-this.body.facing),
+          y: this.body.y + 10 * Math.sin(-this.body.facing)
+        };
+      }
+      return {
+        goal: this.goal
+      };
+    }
+  }]);
+}(IO);
+var io_listenToPlayer = /*#__PURE__*/function (_IO3) {
+  function io_listenToPlayer(b, p) {
+    var _this4;
+    _classCallCheck(this, io_listenToPlayer);
+    _this4 = _callSuper(this, io_listenToPlayer, [b]);
+    _this4.player = p;
+    _this4.acceptsFromTop = false;
+    return _this4;
+  }
+
+  // THE PLAYER MUST HAVE A VALID COMMAND AND TARGET OBJECT
+  _inherits(io_listenToPlayer, _IO3);
+  return _createClass(io_listenToPlayer, [{
+    key: "think",
+    value: function think() {
+      var targ = {
+        x: this.player.target.x,
+        y: this.player.target.y
+      };
+      if (this.player.command.autospin) {
+        var kk = Math.atan2(this.body.control.target.y, this.body.control.target.x) + 0.02;
+        targ = {
+          x: 100 * Math.cos(kk),
+          y: 100 * Math.sin(kk)
+        };
+      }
+      if (this.body.invuln) {
+        if (this.player.command.right || this.player.command.left || this.player.command.up || this.player.command.down || this.player.command.lmb) {
+          this.body.invuln = false;
+        }
+      }
+      this.body.autoOverride = this.body.isDominator ? false : this.player.command.override;
+      return {
+        target: targ,
+        goal: {
+          x: this.body.x + this.player.command.right - this.player.command.left,
+          y: this.body.y + this.player.command.down - this.player.command.up
+        },
+        fire: this.player.command.lmb || this.player.command.autofire,
+        main: this.player.command.lmb || this.player.command.autospin || this.player.command.autofire,
+        alt: this.player.command.rmb
+      };
+    }
+  }]);
+}(IO);
+var io_mapTargetToGoal = /*#__PURE__*/function (_IO4) {
+  function io_mapTargetToGoal(b) {
+    _classCallCheck(this, io_mapTargetToGoal);
+    return _callSuper(this, io_mapTargetToGoal, [b]);
+  }
+  _inherits(io_mapTargetToGoal, _IO4);
+  return _createClass(io_mapTargetToGoal, [{
+    key: "think",
+    value: function think(input) {
+      if (input.main || input.alt) {
+        return {
+          goal: {
+            x: input.target.x + this.body.x,
+            y: input.target.y + this.body.y
+          },
+          power: 1
+        };
+      }
+    }
+  }]);
+}(IO);
+var io_boomerang = /*#__PURE__*/function (_IO5) {
+  function io_boomerang(b) {
+    var _this5;
+    _classCallCheck(this, io_boomerang);
+    _this5 = _callSuper(this, io_boomerang, [b]);
+    _this5.r = 0;
+    _this5.b = b;
+    _this5.m = b.master;
+    _this5.turnover = false;
+    var len = 10 * util.getDistance({
+      x: 0,
+      y: 0
+    }, b.master.control.target);
+    _this5.myGoal = {
+      x: 3 * b.master.control.target.x + b.master.x,
+      y: 3 * b.master.control.target.y + b.master.y
+    };
+    return _this5;
+  }
+  _inherits(io_boomerang, _IO5);
+  return _createClass(io_boomerang, [{
+    key: "think",
+    value: function think(input) {
+      if (this.b.range > this.r) this.r = this.b.range;
+      var t = 1; //1 - Math.sin(2 * Math.PI * this.b.range / this.r) || 1;
+      if (!this.turnover) {
+        if (this.r && this.b.range < this.r * 0.5) {
+          this.turnover = true;
+        }
+        return {
+          goal: this.myGoal,
+          power: t
+        };
+      } else {
+        return {
+          goal: {
+            x: this.m.x,
+            y: this.m.y
+          },
+          power: t
+        };
+      }
+    }
+  }]);
+}(IO);
+var io_goToMasterTarget = /*#__PURE__*/function (_IO6) {
+  function io_goToMasterTarget(body) {
+    var _this6;
+    _classCallCheck(this, io_goToMasterTarget);
+    _this6 = _callSuper(this, io_goToMasterTarget, [body]);
+    _this6.myGoal = {
+      x: body.master.control.target.x + body.master.x,
+      y: body.master.control.target.y + body.master.y
+    };
+    _this6.countdown = 5;
+    return _this6;
+  }
+  _inherits(io_goToMasterTarget, _IO6);
+  return _createClass(io_goToMasterTarget, [{
+    key: "think",
+    value: function think() {
+      if (this.countdown) {
+        if (util.getDistance(this.body, this.myGoal) < 1) {
+          this.countdown--;
+        }
+        return {
+          goal: {
+            x: this.myGoal.x,
+            y: this.myGoal.y
+          }
+        };
+      }
+    }
+  }]);
+}(IO);
+var io_canRepel = /*#__PURE__*/function (_IO7) {
+  function io_canRepel(b) {
+    _classCallCheck(this, io_canRepel);
+    return _callSuper(this, io_canRepel, [b]);
+  }
+  _inherits(io_canRepel, _IO7);
+  return _createClass(io_canRepel, [{
+    key: "think",
+    value: function think(input) {
+      if (input.alt && input.target) {
+        return {
+          target: {
+            x: -input.target.x,
+            y: -input.target.y
+          },
+          main: true
+        };
+      }
+    }
+  }]);
+}(IO);
+var io_alwaysFire = /*#__PURE__*/function (_IO8) {
+  function io_alwaysFire(body) {
+    _classCallCheck(this, io_alwaysFire);
+    return _callSuper(this, io_alwaysFire, [body]);
+  }
+  _inherits(io_alwaysFire, _IO8);
+  return _createClass(io_alwaysFire, [{
+    key: "think",
+    value: function think() {
+      return {
+        fire: true
+      };
+    }
+  }]);
+}(IO);
+var io_targetSelf = /*#__PURE__*/function (_IO9) {
+  function io_targetSelf(body) {
+    _classCallCheck(this, io_targetSelf);
+    return _callSuper(this, io_targetSelf, [body]);
+  }
+  _inherits(io_targetSelf, _IO9);
+  return _createClass(io_targetSelf, [{
+    key: "think",
+    value: function think() {
+      return {
+        main: true,
+        target: {
+          x: 0,
+          y: 0
+        }
+      };
+    }
+  }]);
+}(IO);
+var io_mapAltToFire = /*#__PURE__*/function (_IO0) {
+  function io_mapAltToFire(body) {
+    _classCallCheck(this, io_mapAltToFire);
+    return _callSuper(this, io_mapAltToFire, [body]);
+  }
+  _inherits(io_mapAltToFire, _IO0);
+  return _createClass(io_mapAltToFire, [{
+    key: "think",
+    value: function think(input) {
+      if (input.alt) {
+        return {
+          fire: true
+        };
+      }
+    }
+  }]);
+}(IO);
+var io_onlyAcceptInArc = /*#__PURE__*/function (_IO1) {
+  function io_onlyAcceptInArc(body) {
+    _classCallCheck(this, io_onlyAcceptInArc);
+    return _callSuper(this, io_onlyAcceptInArc, [body]);
+  }
+  _inherits(io_onlyAcceptInArc, _IO1);
+  return _createClass(io_onlyAcceptInArc, [{
+    key: "think",
+    value: function think(input) {
+      if (input.target && this.body.firingArc != null) {
+        if (Math.abs(util.angleDifference(Math.atan2(input.target.y, input.target.x), this.body.firingArc[0])) >= this.body.firingArc[1]) {
+          return {
+            fire: false,
+            alt: false,
+            main: false
+          };
+        }
+      }
+    }
+  }]);
+}(IO);
+var io_nearestDifferentMaster = /*#__PURE__*/function (_IO10) {
+  function io_nearestDifferentMaster(body) {
+    var _this7;
+    _classCallCheck(this, io_nearestDifferentMaster);
+    _this7 = _callSuper(this, io_nearestDifferentMaster, [body]);
+    _this7.targetLock = undefined;
+    _this7.tick = ran.irandom(30);
+    _this7.lead = 0;
+    _this7.validTargets = _this7.buildList(body.fov / 2);
+    _this7.oldHealth = body.health.display();
+    return _this7;
+  }
+  _inherits(io_nearestDifferentMaster, _IO10);
+  return _createClass(io_nearestDifferentMaster, [{
+    key: "buildList",
+    value: function buildList(range) {
+      var _this8 = this;
+      var m = {
+          x: this.body.x,
+          y: this.body.y
+        },
+        mm = {
+          x: this.body.master.master.x,
+          y: this.body.master.master.y
+        },
+        mostDangerous = 0,
+        sqrRange = range * range,
+        keepTarget = false;
+      var out = entities.map(function (e) {
+        if (e.health.amount > 0 && !e.invuln) {
+          if (e.master.master.team !== _this8.body.master.master.team && e.master.master.team !== -101) {
+            if (e.type === "tank" || e.type === "crasher" || !_this8.body.aiSettings.shapefriend && e.type === "food") {
+              if (Math.abs(e.x - m.x) < range && Math.abs(e.y - m.y) < range) {
+                if (!_this8.body.aiSettings.blind || Math.abs(e.x - mm.x) < range && Math.abs(e.y - mm.y) < range) return e;
+              }
+            }
+          }
+        }
+      }).filter(function (e) {
+        return e;
+      });
+      if (!out.length) return [];
+      out = out.map(function (e) {
+        var yaboi = false;
+        if (Math.pow(_this8.body.x - e.x, 2) + Math.pow(_this8.body.y - e.y, 2) < sqrRange) {
+          if (_this8.body.firingArc == null || _this8.body.aiSettings.view360) {
+            yaboi = true;
+          } else if (Math.abs(util.angleDifference(util.getDirection(_this8.body, e), _this8.body.firingArc[0])) < _this8.body.firingArc[1]) yaboi = true;
+        }
+        if (yaboi) {
+          mostDangerous = Math.max(e.dangerValue, mostDangerous);
+          return e;
+        }
+      }).filter(function (e) {
+        if (e != null) {
+          if (_this8.body.aiSettings.farm || e.dangerValue === mostDangerous) {
+            if (_this8.targetLock && e.id === _this8.targetLock.id) keepTarget = true;
+            return e;
+          }
+        }
+      });
+      if (!keepTarget) this.targetLock = undefined;
+      return out;
+    }
+  }, {
+    key: "think",
+    value: function think(input) {
+      if (input.main || input.alt || this.body.master.autoOverride) {
+        this.targetLock = undefined;
+        return {};
+      }
+      var tracking = this.body.topSpeed,
+        defaultRange = this.body.fov / 2,
+        range = defaultRange;
+      for (var i = 0; i < this.body.guns.length; i++) {
+        if (this.body.guns[i].canShoot && !this.body.aiSettings.skynet) {
+          var v = this.body.guns[i].getTracking();
+          tracking = v.speed;
+          var calculatedRange = v.speed * v.range;
+          range = Math.min(defaultRange, Math.max(300, calculatedRange));
+          break;
+        }
+      }
+      if (this.targetLock && this.targetLock.health.amount <= 0) {
+        this.targetLock = undefined;
+        this.tick = 100;
+      }
+      if (this.tick++ > 15 * roomSpeed) {
+        this.tick = 0;
+        this.validTargets = this.buildList(range);
+        if (this.targetLock && this.validTargets.indexOf(this.targetLock) === -1) {
+          this.targetLock = undefined;
+        }
+        if (this.targetLock == null && this.validTargets.length) {
+          this.targetLock = this.validTargets.length === 1 ? this.validTargets[0] : nearest(this.validTargets, {
+            x: this.body.x,
+            y: this.body.y
+          });
+          this.tick = -90;
+        }
+      }
+      if (this.targetLock != null) {
+        var radial = this.targetLock.velocity;
+        var diff = {
+          x: this.targetLock.x - this.body.x,
+          y: this.targetLock.y - this.body.y
+        };
+        if (this.tick % 4 === 0) {
+          this.lead = 0;
+          if (!this.body.aiSettings.chase) {
+            this.lead = tracking > 1 ? timeOfImpact(diff, radial, tracking) : 0;
+          }
+        }
+        return {
+          target: {
+            x: diff.x + this.lead * radial.x,
+            y: diff.y + this.lead * radial.y
+          },
+          fire: true,
+          main: true
+        };
+      }
+      return {};
+    }
+  }]);
+}(IO);
+var io_avoid = /*#__PURE__*/function (_IO11) {
+  function io_avoid(body) {
+    _classCallCheck(this, io_avoid);
+    return _callSuper(this, io_avoid, [body]);
+  }
+  _inherits(io_avoid, _IO11);
+  return _createClass(io_avoid, [{
+    key: "think",
+    value: function think(input) {
+      var masterId = this.body.master.id;
+      var range = this.body.size * this.body.size * 100;
+      this.avoid = nearest(entities, {
+        x: this.body.x,
+        y: this.body.y
+      }, function (test, sqrdst) {
+        return test.master.id !== masterId && (test.type === 'bullet' || test.type === 'drone' || test.type === 'swarm' || test.type === 'trap' || test.type === 'block') && sqrdst < range;
+      });
+      // Aim at that target
+      if (this.avoid != null) {
+        // Consider how fast it's moving.
+        var delt = new Vector(this.body.velocity.x - this.avoid.velocity.x, this.body.velocity.y - this.avoid.velocity.y);
+        var diff = new Vector(this.avoid.x - this.body.x, this.avoid.y - this.body.y);
+        var comp = (delt.x * diff.x + delt.y * diff.y) / delt.length / diff.length;
+        var goal = {};
+        if (comp > 0) {
+          if (input.goal) {
+            var goalDist = Math.sqrt(range / (input.goal.x * input.goal.x + input.goal.y * input.goal.y));
+            goal = {
+              x: input.goal.x * goalDist - diff.x * comp,
+              y: input.goal.y * goalDist - diff.y * comp
+            };
+          } else {
+            goal = {
+              x: -diff.x * comp,
+              y: -diff.y * comp
+            };
+          }
+          return goal;
+        }
+      }
+    }
+  }]);
+}(IO);
+var io_minion = /*#__PURE__*/function (_IO12) {
+  function io_minion(body) {
+    var _this9;
+    _classCallCheck(this, io_minion);
+    _this9 = _callSuper(this, io_minion, [body]);
+    _this9.turnwise = 1;
+    return _this9;
+  }
+  _inherits(io_minion, _IO12);
+  return _createClass(io_minion, [{
+    key: "think",
+    value: function think(input) {
+      if (this.body.aiSettings.reverseDirection && ran.chance(0.005)) {
+        this.turnwise = -1 * this.turnwise;
+      }
+      if (input.target != null && (input.alt || input.main)) {
+        var sizeFactor = Math.sqrt(this.body.master.size / this.body.master.SIZE);
+        var leash = 60 * sizeFactor;
+        var orbit = 120 * sizeFactor;
+        var repel = 135 * sizeFactor;
+        var goal;
+        var power = 1;
+        var target = new Vector(input.target.x, input.target.y);
+        if (input.alt) {
+          // Leash
+          if (target.length < leash) {
+            goal = {
+              x: this.body.x + target.x,
+              y: this.body.y + target.y
+            };
+            // Spiral repel
+          } else if (target.length < repel) {
+            var dir = -this.turnwise * target.direction + Math.PI / 5;
+            goal = {
+              x: this.body.x + Math.cos(dir),
+              y: this.body.y + Math.sin(dir)
+            };
+            // Free repel
+          } else {
+            goal = {
+              x: this.body.x - target.x,
+              y: this.body.y - target.y
+            };
+          }
+        } else if (input.main) {
+          // Orbit point
+          var _dir = this.turnwise * target.direction + 0.01;
+          goal = {
+            x: this.body.x + target.x - orbit * Math.cos(_dir),
+            y: this.body.y + target.y - orbit * Math.sin(_dir)
+          };
+          if (Math.abs(target.length - orbit) < this.body.size * 2) {
+            power = 0.7;
+          }
+        }
+        return {
+          goal: goal,
+          power: power
+        };
+      }
+    }
+  }]);
+}(IO);
+var io_hangOutNearMaster = /*#__PURE__*/function (_IO13) {
+  function io_hangOutNearMaster(body) {
+    var _this0;
+    _classCallCheck(this, io_hangOutNearMaster);
+    _this0 = _callSuper(this, io_hangOutNearMaster, [body]);
+    _this0.acceptsFromTop = false;
+    _this0.orbit = 30;
+    _this0.currentGoal = {
+      x: _this0.body.source.x,
+      y: _this0.body.source.y
+    };
+    _this0.timer = 0;
+    return _this0;
+  }
+  _inherits(io_hangOutNearMaster, _IO13);
+  return _createClass(io_hangOutNearMaster, [{
+    key: "think",
+    value: function think(input) {
+      if (this.body.source != this.body) {
+        var bound1 = this.orbit * 0.8 + this.body.source.size + this.body.size;
+        var bound2 = this.orbit * 1.5 + this.body.source.size + this.body.size;
+        var dist = util.getDistance(this.body, this.body.source) + Math.PI / 8;
+        var output = {
+          target: {
+            x: this.body.velocity.x,
+            y: this.body.velocity.y
+          },
+          goal: this.currentGoal,
+          power: undefined
+        };
+        // Set a goal
+        if (dist > bound2 || this.timer > 30) {
+          this.timer = 0;
+          var dir = util.getDirection(this.body, this.body.source) + Math.PI * ran.random(0.5);
+          var len = ran.randomRange(bound1, bound2);
+          var x = this.body.source.x - len * Math.cos(dir);
+          var y = this.body.source.y - len * Math.sin(dir);
+          this.currentGoal = {
+            x: x,
+            y: y
+          };
+        }
+        if (dist < bound2) {
+          output.power = 0.15;
+          if (ran.chance(0.3)) {
+            this.timer++;
+          }
+        }
+        return output;
+      }
+    }
+  }]);
+}(IO);
+var io_spin = /*#__PURE__*/function (_IO14) {
+  function io_spin(b) {
+    var _this1;
+    _classCallCheck(this, io_spin);
+    _this1 = _callSuper(this, io_spin, [b]);
+    _this1.a = 0;
+    return _this1;
+  }
+  _inherits(io_spin, _IO14);
+  return _createClass(io_spin, [{
+    key: "think",
+    value: function think(input) {
+      this.a += 0.05;
+      var offset = 0;
+      if (this.body.bond != null) {
+        offset = this.body.bound.angle;
+      }
+      return {
+        target: {
+          x: Math.cos(this.a + offset),
+          y: Math.sin(this.a + offset)
+        },
+        main: true
+      };
+    }
+  }]);
+}(IO);
+var io_fastspin = /*#__PURE__*/function (_IO15) {
+  function io_fastspin(b) {
+    var _this10;
+    _classCallCheck(this, io_fastspin);
+    _this10 = _callSuper(this, io_fastspin, [b]);
+    _this10.a = 0;
+    return _this10;
+  }
+  _inherits(io_fastspin, _IO15);
+  return _createClass(io_fastspin, [{
+    key: "think",
+    value: function think(input) {
+      this.a += 0.072;
+      var offset = 0;
+      if (this.body.bond != null) {
+        offset = this.body.bound.angle;
+      }
+      return {
+        target: {
+          x: Math.cos(this.a + offset),
+          y: Math.sin(this.a + offset)
+        },
+        main: true
+      };
+    }
+  }]);
+}(IO);
+var io_reversespin = /*#__PURE__*/function (_IO16) {
+  function io_reversespin(b) {
+    var _this11;
+    _classCallCheck(this, io_reversespin);
+    _this11 = _callSuper(this, io_reversespin, [b]);
+    _this11.a = 0;
+    return _this11;
+  }
+  _inherits(io_reversespin, _IO16);
+  return _createClass(io_reversespin, [{
+    key: "think",
+    value: function think(input) {
+      this.a -= 0.05;
+      var offset = 0;
+      if (this.body.bond != null) {
+        offset = this.body.bound.angle;
+      }
+      return {
+        target: {
+          x: Math.cos(this.a + offset),
+          y: Math.sin(this.a + offset)
+        },
+        main: true
+      };
+    }
+  }]);
+}(IO);
+var io_dontTurn = /*#__PURE__*/function (_IO17) {
+  function io_dontTurn(b) {
+    _classCallCheck(this, io_dontTurn);
+    return _callSuper(this, io_dontTurn, [b]);
+  }
+  _inherits(io_dontTurn, _IO17);
+  return _createClass(io_dontTurn, [{
+    key: "think",
+    value: function think(input) {
+      return {
+        target: {
+          x: 1,
+          y: 0
+        },
+        main: true
+      };
+    }
+  }]);
+}(IO);
+var io_fleeAtLowHealth = /*#__PURE__*/function (_IO18) {
+  function io_fleeAtLowHealth(b) {
+    var _this12;
+    _classCallCheck(this, io_fleeAtLowHealth);
+    _this12 = _callSuper(this, io_fleeAtLowHealth, [b]);
+    _this12.fear = util.clamp(ran.gauss(0.7, 0.15), 0.1, 0.9);
+    return _this12;
+  }
+  _inherits(io_fleeAtLowHealth, _IO18);
+  return _createClass(io_fleeAtLowHealth, [{
+    key: "think",
+    value: function think(input) {
+      if (input.fire && input.target != null && this.body.health.amount < this.body.health.max * this.fear) {
+        return {
+          goal: {
+            x: this.body.x - input.target.x,
+            y: this.body.y - input.target.y
+          }
+        };
+      }
+    }
+  }]);
+}(IO);
+/***** ENTITIES *****/
+// Define skills
+var skcnv = {
+  rld: 0,
+  pen: 1,
+  str: 2,
+  dam: 3,
+  spd: 4,
+  shi: 5,
+  atk: 6,
+  hlt: 7,
+  rgn: 8,
+  mob: 9
+};
+var levelers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 38, 40, 42, 44];
+var Skill = /*#__PURE__*/function () {
+  function Skill() {
+    var inital = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    _classCallCheck(this, Skill);
+    // Just skill stuff. 
+    this.raw = inital;
+    this.caps = [];
+    this.setCaps([c.MAX_SKILL, c.MAX_SKILL, c.MAX_SKILL, c.MAX_SKILL, c.MAX_SKILL, c.MAX_SKILL, c.MAX_SKILL, c.MAX_SKILL, c.MAX_SKILL, c.MAX_SKILL]);
+    this.name = ['Reload', 'Bullet Penetration', 'Bullet Health', 'Bullet Damage', 'Bullet Speed', 'Shield Capacity', 'Body Damage', 'Max Health', 'Shield Regeneration', 'Movement Speed'];
+    this.atk = 0;
+    this.hlt = 0;
+    this.spd = 0;
+    this.str = 0;
+    this.pen = 0;
+    this.dam = 0;
+    this.rld = 0;
+    this.mob = 0;
+    this.rgn = 0;
+    this.shi = 0;
+    this.rst = 0;
+    this.brst = 0;
+    this.ghost = 0;
+    this.acl = 0;
+    this.reset();
+  }
+  return _createClass(Skill, [{
+    key: "reset",
+    value: function reset() {
+      this.points = 0;
+      this.score = 0;
+      this.deduction = 0;
+      this.level = 0;
+      this.canUpgrade = false;
+      this.update();
+      this.maintain();
+    }
+  }, {
+    key: "update",
+    value: function update() {
+      var curve = function () {
+        function make(x) {
+          return Math.log(4 * x + 1) / Math.log(5);
+        }
+        var a = [];
+        for (var i = 0; i < c.MAX_SKILL * 2; i++) {
+          a.push(make(i / c.MAX_SKILL));
+        }
+        // The actual lookup function
+        return function (x) {
+          return a[x * c.MAX_SKILL];
+        };
+      }();
+      function apply(f, x) {
+        return x < 0 ? 1 / (1 - x * f) : f * x + 1;
+      }
+      for (var i = 0; i < 10; i++) {
+        if (this.raw[i] > this.caps[i]) {
+          this.points += this.raw[i] - this.caps[i];
+          this.raw[i] = this.caps[i];
+        }
+      }
+      var attrib = [];
+      for (var _i = 0; _i < 5; _i++) {
+        for (var j = 0; j < 2; j += 1) {
+          attrib[_i + 5 * j] = curve((this.raw[_i + 5 * j] + this.bleed(_i, j)) / c.MAX_SKILL);
+        }
+      }
+      this.rld = Math.pow(0.5, attrib[skcnv.rld]);
+      this.pen = apply(2.5, attrib[skcnv.pen]);
+      this.str = apply(2, attrib[skcnv.str]);
+      this.dam = apply(3, attrib[skcnv.dam]);
+      this.spd = 0.5 + apply(1.5, attrib[skcnv.spd]);
+      this.acl = apply(0.5, attrib[skcnv.rld]);
+      this.rst = 0.5 * attrib[skcnv.str] + 2.5 * attrib[skcnv.pen];
+      this.ghost = attrib[skcnv.pen];
+      this.shi = c.GLASS_HEALTH_FACTOR * apply(3 / c.GLASS_HEALTH_FACTOR - 1, attrib[skcnv.shi]);
+      this.atk = apply(1, attrib[skcnv.atk]);
+      this.hlt = c.GLASS_HEALTH_FACTOR * apply(2 / c.GLASS_HEALTH_FACTOR - 1, attrib[skcnv.hlt]);
+      this.mob = apply(0.8, attrib[skcnv.mob]);
+      this.rgn = apply(25, attrib[skcnv.rgn]);
+      this.brst = 0.3 * (0.5 * attrib[skcnv.atk] + 0.5 * attrib[skcnv.hlt] + attrib[skcnv.rgn]);
+    }
+  }, {
+    key: "set",
+    value: function set(thing) {
+      this.raw[0] = thing[0];
+      this.raw[1] = thing[1];
+      this.raw[2] = thing[2];
+      this.raw[3] = thing[3];
+      this.raw[4] = thing[4];
+      this.raw[5] = thing[5];
+      this.raw[6] = thing[6];
+      this.raw[7] = thing[7];
+      this.raw[8] = thing[8];
+      this.raw[9] = thing[9];
+      this.update();
+    }
+  }, {
+    key: "setCaps",
+    value: function setCaps(thing) {
+      this.caps[0] = thing[0];
+      this.caps[1] = thing[1];
+      this.caps[2] = thing[2];
+      this.caps[3] = thing[3];
+      this.caps[4] = thing[4];
+      this.caps[5] = thing[5];
+      this.caps[6] = thing[6];
+      this.caps[7] = thing[7];
+      this.caps[8] = thing[8];
+      this.caps[9] = thing[9];
+      this.update();
+    }
+  }, {
+    key: "maintain",
+    value: function maintain() {
+      if (this.level < c.SKILL_CAP) {
+        if (this.score - this.deduction >= this.levelScore) {
+          this.deduction += this.levelScore;
+          this.level += 1;
+          this.points += this.levelPoints;
+          if (this.level == c.TIER_1 || this.level == c.TIER_2 || this.level == c.TIER_3) {
+            this.canUpgrade = true;
+          }
+          this.update();
+          return true;
+        }
+      }
+      return false;
+    }
+  }, {
+    key: "levelScore",
+    get: function get() {
+      return Math.ceil(1.8 * Math.pow(this.level + 1, 1.8) - 2 * this.level + 1);
+    }
+  }, {
+    key: "progress",
+    get: function get() {
+      return this.levelScore ? (this.score - this.deduction) / this.levelScore : 0;
+    }
+  }, {
+    key: "levelPoints",
+    get: function get() {
+      var _this13 = this;
+      if (levelers.findIndex(function (e) {
+        return e === _this13.level;
+      }) != -1) {
+        return 1;
+      }
+      return 0;
+    }
+  }, {
+    key: "cap",
+    value: function cap(skill) {
+      var real = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+      if (!real && this.level < c.SKILL_SOFT_CAP) {
+        return Math.round(this.caps[skcnv[skill]] * c.SOFT_MAX_SKILL);
+      }
+      return this.caps[skcnv[skill]];
+    }
+  }, {
+    key: "bleed",
+    value: function bleed(i, j) {
+      var a = (i + 2) % 5 + 5 * j,
+        b = (i + (j === 1 ? 1 : 4)) % 5 + 5 * j;
+      var value = 0;
+      var denom = Math.max(c.MAX_SKILL, this.caps[i + 5 * j]);
+      value += (1 - Math.pow(this.raw[a] / denom - 1, 2)) * this.raw[a] * c.SKILL_LEAK;
+      value -= Math.pow(this.raw[b] / denom, 2) * this.raw[b] * c.SKILL_LEAK;
+      return value;
+    }
+  }, {
+    key: "upgrade",
+    value: function upgrade(stat) {
+      if (this.points && this.amount(stat) < this.cap(stat)) {
+        this.change(stat, 1);
+        this.points -= 1;
+        return true;
+      }
+      return false;
+    }
+  }, {
+    key: "title",
+    value: function title(stat) {
+      return this.name[skcnv[stat]];
+    }
+
+    /*
+    let i = skcnv[skill] % 5,
+        j = (skcnv[skill] - i) / 5;
+    let roundvalue = Math.round(this.bleed(i, j) * 10);
+    let string = '';
+    if (roundvalue > 0) { string += '+' + roundvalue + '%'; }
+    if (roundvalue < 0) { string += '-' + roundvalue + '%'; }
+     return string;
+    */
+  }, {
+    key: "amount",
+    value: function amount(skill) {
+      return this.raw[skcnv[skill]];
+    }
+  }, {
+    key: "change",
+    value: function change(skill, levels) {
+      this.raw[skcnv[skill]] += levels;
+      this.update();
+    }
+  }]);
+}();
+var lazyRealSizes = function () {
+  var o = [1, 1, 1];
+  for (var i = 3; i < 16; i++) {
+    // We say that the real size of a 0-gon, 1-gon, 2-gon is one, then push the real sizes of triangles, squares, etc...
+    o.push(Math.sqrt(2 * Math.PI / i * (1 / Math.sin(2 * Math.PI / i))));
+  }
+  return o;
+}();
+
+// Define how guns work
+var Gun = /*#__PURE__*/function () {
+  function Gun(body, info) {
+    _classCallCheck(this, Gun);
+    this.lastShot = {
+      time: 0,
+      power: 0
+    };
+    this.body = body;
+    this.master = body.source;
+    this.label = '';
+    this.controllers = [];
+    this.children = [];
+    this.control = {
+      target: new Vector(0, 0),
+      goal: new Vector(0, 0),
+      main: false,
+      alt: false,
+      fire: false
+    };
+    this.canShoot = false;
+    if (info.PROPERTIES != null && info.PROPERTIES.TYPE != null) {
+      this.canShoot = true;
+      this.label = info.PROPERTIES.LABEL == null ? '' : info.PROPERTIES.LABEL;
+      if (Array.isArray(info.PROPERTIES.TYPE)) {
+        // This is to be nicer about our definitions
+        this.bulletTypes = info.PROPERTIES.TYPE;
+        this.natural = info.PROPERTIES.TYPE.BODY;
+      } else {
+        this.bulletTypes = [info.PROPERTIES.TYPE];
+      }
+      // Pre-load bullet definitions so we don't have to recalculate them every shot
+      var natural = {};
+      this.bulletTypes.forEach(function setNatural(type) {
+        if (type.PARENT != null) {
+          // Make sure we load from the parents first
+          for (var i = 0; i < type.PARENT.length; i++) {
+            setNatural(type.PARENT[i]);
+          }
+        }
+        if (type.BODY != null) {
+          // Get values if they exist
+          for (var index in type.BODY) {
+            natural[index] = type.BODY[index];
+          }
+        }
+      });
+      this.natural = natural; // Save it
+      if (info.PROPERTIES.GUN_CONTROLLERS != null) {
+        var toAdd = [];
+        var self = this;
+        info.PROPERTIES.GUN_CONTROLLERS.forEach(function (ioName) {
+          toAdd.push(eval('new ' + ioName + '(self)'));
+        });
+        this.controllers = toAdd.concat(this.controllers);
+      }
+      this.autofire = info.PROPERTIES.AUTOFIRE == null ? false : info.PROPERTIES.AUTOFIRE;
+      this.altFire = info.PROPERTIES.ALT_FIRE == null ? false : info.PROPERTIES.ALT_FIRE;
+      this.settings = info.PROPERTIES.SHOOT_SETTINGS == null ? [] : info.PROPERTIES.SHOOT_SETTINGS;
+      this.calculator = info.PROPERTIES.STAT_CALCULATOR == null ? 'default' : info.PROPERTIES.STAT_CALCULATOR;
+      this.waitToCycle = info.PROPERTIES.WAIT_TO_CYCLE == null ? false : info.PROPERTIES.WAIT_TO_CYCLE;
+      this.bulletStats = info.PROPERTIES.BULLET_STATS == null || info.PROPERTIES.BULLET_STATS == 'master' ? 'master' : new Skill(info.PROPERTIES.BULLET_STATS);
+      this.settings = info.PROPERTIES.SHOOT_SETTINGS == null ? [] : info.PROPERTIES.SHOOT_SETTINGS;
+      this.countsOwnKids = info.PROPERTIES.MAX_CHILDREN == null ? false : info.PROPERTIES.MAX_CHILDREN;
+      this.syncsSkills = info.PROPERTIES.SYNCS_SKILLS == null ? false : info.PROPERTIES.SYNCS_SKILLS;
+      this.negRecoil = info.PROPERTIES.NEGATIVE_RECOIL == null ? false : info.PROPERTIES.NEGATIVE_RECOIL;
+    }
+    this.color = info.PROPERTIES != null && info.PROPERTIES.GUN_COLOR != null ? info.PROPERTIES.GUN_COLOR : null;
+    this.stick = info.PROPERTIES != null && info.PROPERTIES.STICK ? true : false;
+    this.stuckBullet = null;
+    this.stuckBulletVelocity = new Vector(0, 0);
+    this.gradient = info.PROPERTIES != null && info.PROPERTIES.GRADIENT != null ? info.PROPERTIES.GRADIENT : null;
+    this.gunShape = info.PROPERTIES != null && info.PROPERTIES.SHAPE != null ? info.PROPERTIES.SHAPE : null;
+    var position = info.POSITION;
+    this.length = position[0] / 10;
+    this.width = position[1] / 10;
+    this.aspect = position[2];
+    var _off = new Vector(position[3], position[4]);
+    this.angle = position[5] * Math.PI / 180;
+    this.direction = _off.direction;
+    this.offset = _off.length / 10;
+    this.delay = position[6];
+    this.position = 0;
+    this.motion = 0;
+    if (this.canShoot) {
+      this.cycle = !this.waitToCycle - this.delay;
+      this.trueRecoil = this.settings.recoil;
+    }
+  }
+  return _createClass(Gun, [{
+    key: "recoil",
+    value: function recoil() {
+      if (this.motion || this.position) {
+        // Simulate recoil
+        this.motion -= 0.25 * this.position / roomSpeed;
+        this.position += this.motion;
+        if (this.position < 0) {
+          // Bouncing off the back
+          this.position = 0;
+          this.motion = -this.motion;
+        }
+        if (this.motion > 0) {
+          this.motion *= 0.75;
+        }
+      }
+      if (this.canShoot && !this.body.settings.hasNoRecoil) {
+        // Apply recoil to motion
+        if (this.motion > 0) {
+          var recoilForce = -this.position * this.trueRecoil * 0.045 / roomSpeed;
+          this.body.accel.x += recoilForce * Math.cos(this.body.facing + this.angle);
+          this.body.accel.y += recoilForce * Math.sin(this.body.facing + this.angle);
+        }
+      }
+    }
+  }, {
+    key: "getSkillRaw",
+    value: function getSkillRaw() {
+      if (this.bulletStats === 'master') {
+        return [this.body.skill.raw[0], this.body.skill.raw[1], this.body.skill.raw[2], this.body.skill.raw[3], this.body.skill.raw[4], 0, 0, 0, 0, 0];
+      }
+      return this.bulletStats.raw;
+    }
+  }, {
+    key: "getLastShot",
+    value: function getLastShot() {
+      return this.lastShot;
+    }
+  }, {
+    key: "getBarrelTip",
+    value: function getBarrelTip() {
+      var gx = this.offset * Math.cos(this.direction + this.angle + this.body.facing) + (1.5 * this.length - this.width * this.settings.size / 2) * Math.cos(this.angle + this.body.facing);
+      var gy = this.offset * Math.sin(this.direction + this.angle + this.body.facing) + (1.5 * this.length - this.width * this.settings.size / 2) * Math.sin(this.angle + this.body.facing);
+      return {
+        x: this.body.x + this.body.size * gx,
+        y: this.body.y + this.body.size * gy
+      };
+    }
+  }, {
+    key: "live",
+    value: function live() {
+      // Do 
+      this.recoil();
+      // Update stuck bullet position each tick
+      if (this.stick && this.stuckBullet) {
+        if (this.stuckBullet.isDead()) {
+          this.stuckBullet = null;
+        } else {
+          var tip = this.getBarrelTip();
+          this.stuckBullet.x = tip.x;
+          this.stuckBullet.y = tip.y;
+          this.stuckBullet.velocity.x = this.stuckBulletVelocity.x;
+          this.stuckBullet.velocity.y = this.stuckBulletVelocity.y;
+        }
+      }
+      // Dummies ignore this
+      if (this.canShoot) {
+        // Find the proper skillset for shooting
+        var sk = this.bulletStats === 'master' ? this.body.skill : this.bulletStats;
+        // Decides what to do based on child-counting settings
+        var shootPermission = this.countsOwnKids ? this.countsOwnKids > this.children.length * (this.calculator == 'necro' ? sk.rld : 1) : this.body.maxChildren ? this.body.maxChildren > this.body.children.length * (this.calculator == 'necro' ? sk.rld : 1) : true;
+        // Override in invuln
+        if (this.body.master.invuln) {
+          shootPermission = false;
+        }
+        // Cycle up if we should
+        if (shootPermission || !this.waitToCycle) {
+          if (this.cycle < 1) {
+            this.cycle += 1 / this.settings.reload / roomSpeed / (this.calculator == 'necro' || this.calculator == 'fixed reload' ? 1 : sk.rld);
+          }
+        }
+        // Firing routines
+        if (shootPermission && (this.autofire || (this.altFire ? this.body.control.alt : this.body.control.fire))) {
+          if (this.cycle >= 1) {
+            // Find the end of the gun barrel
+            var gx = this.offset * Math.cos(this.direction + this.angle + this.body.facing) + (1.5 * this.length - this.width * this.settings.size / 2) * Math.cos(this.angle + this.body.facing);
+            var gy = this.offset * Math.sin(this.direction + this.angle + this.body.facing) + (1.5 * this.length - this.width * this.settings.size / 2) * Math.sin(this.angle + this.body.facing);
+            // Shoot, multiple times in a tick if needed
+            while (shootPermission && this.cycle >= 1) {
+              this.fire(gx, gy, sk);
+              // Figure out if we may still shoot
+              shootPermission = this.countsOwnKids ? this.countsOwnKids > this.children.length : this.body.maxChildren ? this.body.maxChildren > this.body.children.length : true;
+              // Cycle down
+              this.cycle -= 1;
+            }
+          } // If we're not shooting, only cycle up to where we'll have the proper firing delay
+        } else if (this.cycle > !this.waitToCycle - this.delay) {
+          this.cycle = !this.waitToCycle - this.delay;
+        }
+      }
+    }
+  }, {
+    key: "syncChildren",
+    value: function syncChildren() {
+      if (this.syncsSkills) {
+        var self = this;
+        this.children.forEach(function (o) {
+          o.define({
+            BODY: self.interpret(),
+            SKILL: self.getSkillRaw()
+          });
+          o.refreshBodyAttributes();
+        });
+      }
+    }
+  }, {
+    key: "fire",
+    value: function fire(gx, gy, sk) {
+      // Recoil
+      this.lastShot.time = util.time();
+      this.lastShot.power = 3 * Math.log(Math.sqrt(sk.spd) + this.trueRecoil + 1) + 1;
+      this.motion += this.lastShot.power;
+      // Find inaccuracy
+      var ss, sd;
+      do {
+        ss = ran.gauss(0, Math.sqrt(this.settings.shudder));
+      } while (Math.abs(ss) >= this.settings.shudder * 2);
+      do {
+        sd = ran.gauss(0, this.settings.spray * this.settings.shudder);
+      } while (Math.abs(sd) >= this.settings.spray / 2);
+      sd *= Math.PI / 180;
+      // Find speed
+      var s = new Vector((this.negRecoil ? -1 : 1) * this.settings.speed * c.runSpeed * sk.spd * (1 + ss) * Math.cos(this.angle + this.body.facing + sd), (this.negRecoil ? -1 : 1) * this.settings.speed * c.runSpeed * sk.spd * (1 + ss) * Math.sin(this.angle + this.body.facing + sd));
+      // Boost it if we should
+      if (this.body.velocity.length && s.length) {
+        var extraBoost = Math.max(0, s.x * this.body.velocity.x + s.y * this.body.velocity.y) / this.body.velocity.length / s.length;
+        if (extraBoost && isFinite(extraBoost)) {
+          var len = s.length;
+          s.x += this.body.velocity.length * extraBoost * s.x / len;
+          s.y += this.body.velocity.length * extraBoost * s.y / len;
+        }
+      }
+      // Final NaN guard — never spawn a bullet with garbage velocity
+      if (!isFinite(s.x) || !isFinite(s.y)) {
+        s.x = 0;
+        s.y = 0;
+      }
+      // If STICK is enabled, kill the previous stuck bullet before spawning a new one
+      if (this.stick && this.stuckBullet && !this.stuckBullet.isDead()) {
+        this.stuckBullet.kill();
+        this.stuckBullet = null;
+      }
+      // Create the bullet
+      var o = new Entity({
+        x: this.body.x + this.body.size * gx - (this.stick ? 0 : s.x),
+        y: this.body.y + this.body.size * gy - (this.stick ? 0 : s.y)
+      }, this.master.master);
+      /*let jumpAhead = this.cycle - 1;
+      if (jumpAhead) {
+          o.x += s.x * this.cycle / jumpAhead;
+          o.y += s.y * this.cycle / jumpAhead;
+      }*/
+      o.velocity = s;
+      this.bulletInit(o);
+      o.coreSize = o.SIZE;
+      // Track the stuck bullet
+      if (this.stick) {
+        this.stuckBullet = o;
+        this.stuckBulletVelocity = new Vector(s.x, s.y);
+      }
+    }
+  }, {
+    key: "bulletInit",
+    value: function bulletInit(o) {
+      var _this14 = this;
+      // Define it by its natural properties
+      this.bulletTypes.forEach(function (type) {
+        return o.define(type);
+      });
+      // Pass the gun attributes
+      o.define({
+        BODY: this.interpret(),
+        SKILL: this.getSkillRaw(),
+        SIZE: this.body.size * this.width * this.settings.size / 2,
+        LABEL: this.master.label + (this.label ? ' ' + this.label : '') + ' ' + o.label
+      });
+      o.color = this.body.master.color;
+      // Keep track of it and give it the function it needs to deutil.log itself upon death
+      if (this.countsOwnKids) {
+        o.parent = this;
+        this.children.push(o);
+      } else if (this.body.maxChildren) {
+        o.parent = this.body;
+        this.body.children.push(o);
+        this.children.push(o);
+      }
+      o.source = this.body;
+      o.facing = o.velocity.direction;
+      // Necromancers.
+      if (this.calculator == 7) {
+        var oo = o;
+        o.necro = function (host) {
+          var shootPermission = _this14.countsOwnKids ? _this14.countsOwnKids > _this14.children.length * (_this14.bulletStats === 'master' ? _this14.body.skill.rld : _this14.bulletStats.rld) : _this14.body.maxChildren ? _this14.body.maxChildren > _this14.body.children.length * (_this14.bulletStats === 'master' ? _this14.body.skill.rld : _this14.bulletStats.rld) : true;
+          if (shootPermission) {
+            var save = {
+              facing: host.facing,
+              size: host.SIZE
+            };
+            host.define(Class.genericEntity);
+            _this14.bulletInit(host);
+            host.team = oo.master.master.team;
+            host.master = oo.master;
+            host.color = oo.color;
+            host.facing = save.facing;
+            host.SIZE = save.size;
+            host.health.amount = host.health.max;
+            return true;
+          }
+          return false;
+        };
+      }
+      // Otherwise
+      o.refreshBodyAttributes();
+      o.life();
+    }
+  }, {
+    key: "getTracking",
+    value: function getTracking() {
+      return {
+        speed: c.runSpeed * (this.bulletStats == 'master' ? this.body.skill.spd : this.bulletStats.spd) * this.settings.maxSpeed * this.natural.SPEED,
+        range: Math.sqrt(this.bulletStats == 'master' ? this.body.skill.spd : this.bulletStats.spd) * this.settings.range * this.natural.RANGE
+      };
+    }
+  }, {
+    key: "interpret",
+    value: function interpret() {
+      var sizeFactor = this.master.size / this.master.SIZE;
+      var shoot = this.settings;
+      var sk = this.bulletStats == 'master' ? this.body.skill : this.bulletStats;
+      // Defaults
+      var out = {
+        SPEED: shoot.maxSpeed * sk.spd,
+        HEALTH: shoot.health * sk.str,
+        RESIST: shoot.resist + sk.rst,
+        DAMAGE: shoot.damage * sk.dam,
+        PENETRATION: Math.max(1, shoot.pen * sk.pen),
+        RANGE: shoot.range / Math.sqrt(sk.spd),
+        DENSITY: shoot.density * sk.pen * sk.pen / sizeFactor,
+        PUSHABILITY: 1 / sk.pen,
+        HETERO: 3 - 2.8 * sk.ghost
+      };
+      // Special cases
+      switch (this.calculator) {
+        case 'thruster':
+          this.trueRecoil = this.settings.recoil * Math.sqrt(sk.rld * sk.spd);
+          break;
+        case 'sustained':
+          out.RANGE = shoot.range;
+          break;
+        case 'swarm':
+          out.PENETRATION = Math.max(1, shoot.pen * (0.5 * (sk.pen - 1) + 1));
+          out.HEALTH /= shoot.pen * sk.pen;
+          break;
+        case 'trap':
+        case 'block':
+          out.PUSHABILITY = 1 / Math.pow(sk.pen, 0.5);
+          out.RANGE = shoot.range;
+          break;
+        case 'necro':
+        case 'drone':
+          out.PUSHABILITY = 1;
+          out.PENETRATION = Math.max(1, shoot.pen * (0.5 * (sk.pen - 1) + 1));
+          out.HEALTH = (shoot.health * sk.str + sizeFactor) / Math.pow(sk.pen, 0.8);
+          out.DAMAGE = shoot.damage * sk.dam * Math.sqrt(sizeFactor) * shoot.pen * sk.pen;
+          out.RANGE = shoot.range * Math.sqrt(sizeFactor);
+          break;
+      }
+      // Go through and make sure we respect its natural properties
+      for (var property in out) {
+        if (this.natural[property] == null || !out.hasOwnProperty(property)) continue;
+        out[property] *= this.natural[property];
+      }
+      return out;
+    }
+  }]);
+}(); // Define entities
+var minimap = [];
+var views = [];
+var entitiesToAvoid = [];
+var dirtyCheck = function dirtyCheck(p, r) {
+  return entitiesToAvoid.some(function (e) {
+    return Math.abs(p.x - e.x) < r + e.size && Math.abs(p.y - e.y) < r + e.size;
+  });
+};
+var grid = new hshg.HSHG();
+var entitiesIdLog = 0;
+var entities = [];
+var purgeEntities = function purgeEntities() {
+  entities = entities.filter(function (e) {
+    return !e.isGhost;
+  });
+};
+var bringToLife = function () {
+  var remapTarget = function remapTarget(i, ref, self) {
+    if (i.target == null || !i.main && !i.alt) return undefined;
+    return {
+      x: i.target.x + ref.x - self.x,
+      y: i.target.y + ref.y - self.y
+    };
+  };
+  var passer = function passer(a, b, acceptsFromTop) {
+    return function (index) {
+      if (a != null && a[index] != null && (b[index] == null || acceptsFromTop)) {
+        b[index] = a[index];
+      }
+    };
+  };
+  return function (my) {
+    // Size
+    if (my.SIZE - my.coreSize) my.coreSize += (my.SIZE - my.coreSize) / 100;
+    // Think 
+    var faucet = my.settings.independent || my.source == null || my.source === my ? {} : my.source.control;
+    var b = {
+      target: remapTarget(faucet, my.source, my),
+      goal: undefined,
+      fire: faucet.fire,
+      main: faucet.main,
+      alt: faucet.alt,
+      power: undefined
+    };
+    // Seek attention
+    if (my.settings.attentionCraver && !faucet.main && my.range) {
+      my.range -= 1;
+    }
+    // Force Dominators to be independent of their master's control inputs
+    if (my.isDominator) {
+      faucet = {};
+      b.target = undefined;
+      b.fire = false;
+      b.main = false;
+      b.alt = false;
+    }
+    // So we start with my master's thoughts and then we filter them down through our control stack
+    my.controllers.forEach(function (AI) {
+      var a = AI.think(b);
+      var passValue = passer(a, b, AI.acceptsFromTop);
+      passValue('target');
+      passValue('goal');
+      passValue('fire');
+      passValue('main');
+      passValue('alt');
+      passValue('power');
+    });
+    my.control.target = b.target == null ? my.control.target : b.target;
+    my.control.goal = b.goal;
+    my.control.fire = b.fire;
+    my.control.main = b.main;
+    my.control.alt = b.alt;
+    my.control.power = b.power == null ? 1 : b.power;
+    // React
+    my.move();
+    my.face();
+    // Handle guns and turrets if we've got them
+    my.guns.forEach(function (gun) {
+      return gun.live();
+    });
+    my.turrets.forEach(function (turret) {
+      return turret.life();
+    });
+    if (my.skill.maintain()) my.refreshBodyAttributes();
+  };
+}();
+var HealthType = /*#__PURE__*/function () {
+  function HealthType(health, type) {
+    var resist = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+    _classCallCheck(this, HealthType);
+    this.max = health;
+    this.amount = health;
+    this.type = type;
+    this.resist = resist;
+    this.regen = 0;
+  }
+  return _createClass(HealthType, [{
+    key: "set",
+    value: function set(health) {
+      var regen = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+      this.amount = this.max ? this.amount / this.max * health : health;
+      this.max = health;
+      this.regen = regen;
+    }
+  }, {
+    key: "display",
+    value: function display() {
+      return this.amount / this.max;
+    }
+  }, {
+    key: "getDamage",
+    value: function getDamage(amount) {
+      var capped = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+      switch (this.type) {
+        case 'dynamic':
+          return capped ? Math.min(amount * this.permeability, this.amount) : amount * this.permeability;
+        case 'static':
+          return capped ? Math.min(amount, this.amount) : amount;
+      }
+    }
+  }, {
+    key: "regenerate",
+    value: function regenerate() {
+      var boost = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      boost /= 2;
+      var cons = 5;
+      switch (this.type) {
+        case 'static':
+          if (this.amount >= this.max || !this.amount) break;
+          this.amount += cons * (this.max / 10 / 60 / 2.5 + boost);
+          break;
+        case 'dynamic':
+          var r = util.clamp(this.amount / this.max, 0, 1);
+          if (!r) {
+            this.amount = 0.0001;
+          }
+          if (r === 1) {
+            this.amount = this.max;
+          } else {
+            this.amount += cons * (this.regen * Math.exp(-50 * Math.pow(Math.sqrt(0.5 * r) - 0.4, 2)) / 3 + r * this.max / 10 / 15 + boost);
+          }
+          break;
+      }
+      this.amount = util.clamp(this.amount, 0, this.max);
+    }
+  }, {
+    key: "permeability",
+    get: function get() {
+      switch (this.type) {
+        case 'static':
+          return 1;
+        case 'dynamic':
+          return this.max ? util.clamp(this.amount / this.max, 0, 1) : 0;
+      }
+    }
+  }, {
+    key: "ratio",
+    get: function get() {
+      return this.max ? util.clamp(1 - Math.pow(this.amount / this.max - 1, 4), 0, 1) : 0;
+    }
+  }]);
+}();
+var Entity = /*#__PURE__*/function () {
+  function Entity(position) {
+    var _this15 = this;
+    var master = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this;
+    _classCallCheck(this, Entity);
+    this.isGhost = false;
+    this.killCount = {
+      solo: 0,
+      assists: 0,
+      bosses: 0,
+      killers: []
+    };
+    this.creationTime = new Date().getTime();
+    // Inheritance
+    this.master = master;
+    this.source = this;
+    this.parent = this;
+    this.control = {
+      target: new Vector(0, 0),
+      goal: new Vector(0, 0),
+      main: false,
+      alt: false,
+      fire: false,
+      power: 0
+    };
+    this.isInGrid = false;
+    this.removeFromGrid = function () {
+      if (_this15.isInGrid) {
+        grid.removeObject(_this15);
+        _this15.isInGrid = false;
+      }
+    };
+    this.addToGrid = function () {
+      if (!_this15.isInGrid && _this15.bond == null) {
+        grid.addObject(_this15);
+        _this15.isInGrid = true;
+      }
+    };
+    this.activation = function () {
+      var active = true;
+      var timer = ran.irandom(15);
+      return {
+        update: function update() {
+          if (_this15.isDead()) return 0;
+          // Check if I'm in anybody's view
+          if (!active) {
+            _this15.removeFromGrid();
+            // Remove bullets and swarm
+            if (_this15.settings.diesAtRange) _this15.kill();
+            // Still have limited update cycles but do it much more slowly.
+            if (!timer--) active = true;
+          } else {
+            _this15.addToGrid();
+            timer = 15;
+            active = views.some(function (v) {
+              return v.check(_this15, 0.6);
+            });
+          }
+        },
+        check: function check() {
+          return active;
+        }
+      };
+    }();
+    this.autoOverride = false;
+    this.controllers = [];
+    this.blend = {
+      color: '#FFFFFF',
+      amount: 0
+    };
+    // Objects
+    this.skill = new Skill();
+    this.health = new HealthType(1, 'static', 0);
+    this.shield = new HealthType(0, 'dynamic');
+    this.guns = [];
+    this.turrets = [];
+    this.upgrades = [];
+    this.settings = {};
+    this.aiSettings = {};
+    this.children = [];
+    // Initalize physics and collision
+    this.maxSpeed = 0;
+    this.facing = 0;
+    this.vfacing = 0;
+    this.range = 0;
+    this.damageRecieved = 0;
+    this.stepRemaining = 1;
+    this.x = position.x;
+    this.y = position.y;
+    this.velocity = new Vector(0, 0);
+    this.accel = new Vector(0, 0);
+    this.damp = 0.05;
+    this.collisionArray = [];
+    this.invuln = false;
+    // Define it
+    this.SIZE = 1;
+    this.define(Class.genericEntity);
+    // Get a new unique id
+    this.id = entitiesIdLog++;
+    this.team = this.id;
+    this.team = master.team;
+    // This is for collisions
+    this.updateAABB = function () {};
+    this.getAABB = function () {
+      var data = {},
+        savedSize = 0;
+      var getLongestEdge = function getLongestEdge(x1, y1, x2, y2) {
+        return Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
+      };
+      _this15.updateAABB = function (active) {
+        if (_this15.bond != null) return 0;
+        if (!active) {
+          data.active = false;
+          return 0;
+        }
+        // Get bounds
+        var x1 = Math.min(_this15.x, _this15.x + _this15.velocity.x + _this15.accel.x) - _this15.realSize - 5;
+        var y1 = Math.min(_this15.y, _this15.y + _this15.velocity.y + _this15.accel.y) - _this15.realSize - 5;
+        var x2 = Math.max(_this15.x, _this15.x + _this15.velocity.x + _this15.accel.x) + _this15.realSize + 5;
+        var y2 = Math.max(_this15.y, _this15.y + _this15.velocity.y + _this15.accel.y) + _this15.realSize + 5;
+        // Size check
+        var size = getLongestEdge(x1, y1, x2, y1);
+        var sizeDiff = savedSize / size;
+        // Update data
+        data = {
+          min: [x1, y1],
+          max: [x2, y2],
+          active: true,
+          size: size
+        };
+        // Update grid if needed
+        if (sizeDiff > Math.SQRT2 || sizeDiff < Math.SQRT1_2) {
+          _this15.removeFromGrid();
+          _this15.addToGrid();
+          savedSize = data.size;
+        }
+      };
+      return function () {
+        return data;
+      };
+    }();
+    this.updateAABB(true);
+    entities.push(this); // everything else
+    views.forEach(function (v) {
+      return v.add(_this15);
+    });
+  }
+  return _createClass(Entity, [{
+    key: "life",
+    value: function life() {
+      bringToLife(this);
+    }
+  }, {
+    key: "addController",
+    value: function addController(newIO) {
+      if (Array.isArray(newIO)) {
+        this.controllers = newIO.concat(this.controllers);
+      } else {
+        this.controllers.unshift(newIO);
+      }
+    }
+  }, {
+    key: "define",
+    value: function define(set) {
+      var _this16 = this;
+      if (!set) return;
+      if (set.PARENT != null) {
+        for (var i = 0; i < set.PARENT.length; i++) {
+          var parentDef = set.PARENT[i];
+          if (parentDef && _typeof(parentDef) === 'object') this.define(parentDef);
+        }
+      }
+      if (set.index != null) {
+        this.index = set.index;
+      }
+      if (set.NAME != null) {
+        this.name = set.NAME;
+      }
+      if (set.LABEL != null) {
+        this.label = set.LABEL;
+      }
+      if (set.TYPE != null) {
+        this.type = set.TYPE;
+      }
+      if (set.SHAPE != null) {
+        this.shape = set.SHAPE;
+      }
+      if (set.COLOR != null) {
+        this.color = set.COLOR;
+      }
+      if (set.CONTROLLERS != null) {
+        var toAdd = [];
+        var self = this;
+        set.CONTROLLERS.forEach(function (ioName) {
+          toAdd.push(eval('new io_' + ioName + '(self)'));
+        });
+        this.addController(toAdd);
+      }
+      if (set.MOTION_TYPE != null) {
+        this.motionType = set.MOTION_TYPE;
+      }
+      if (set.FACING_TYPE != null) {
+        this.facingType = set.FACING_TYPE;
+      }
+      if (set.DRAW_HEALTH != null) {
+        this.settings.drawHealth = set.DRAW_HEALTH;
+      }
+      if (set.DRAW_SELF != null) {
+        this.settings.drawShape = set.DRAW_SELF;
+      }
+      if (set.DAMAGE_EFFECTS != null) {
+        this.settings.damageEffects = set.DAMAGE_EFFECTS;
+      }
+      if (set.RATIO_EFFECTS != null) {
+        this.settings.ratioEffects = set.RATIO_EFFECTS;
+      }
+      if (set.MOTION_EFFECTS != null) {
+        this.settings.motionEffects = set.MOTION_EFFECTS;
+      }
+      if (set.ACCEPTS_SCORE != null) {
+        this.settings.acceptsScore = set.ACCEPTS_SCORE;
+      }
+      if (set.GIVE_KILL_MESSAGE != null) {
+        this.settings.givesKillMessage = set.GIVE_KILL_MESSAGE;
+      }
+      if (set.CAN_GO_OUTSIDE_ROOM != null) {
+        this.settings.canGoOutsideRoom = set.CAN_GO_OUTSIDE_ROOM;
+      }
+      if (set.HITS_OWN_TYPE != null) {
+        this.settings.hitsOwnType = set.HITS_OWN_TYPE;
+      }
+      if (set.DIE_AT_LOW_SPEED != null) {
+        this.settings.diesAtLowSpeed = set.DIE_AT_LOW_SPEED;
+      }
+      if (set.DIE_AT_RANGE != null) {
+        this.settings.diesAtRange = set.DIE_AT_RANGE;
+      }
+      if (set.INDEPENDENT != null) {
+        this.settings.independent = set.INDEPENDENT;
+      }
+      if (set.PERSISTS_AFTER_DEATH != null) {
+        this.settings.persistsAfterDeath = set.PERSISTS_AFTER_DEATH;
+      }
+      if (set.CLEAR_ON_MASTER_UPGRADE != null) {
+        this.settings.clearOnMasterUpgrade = set.CLEAR_ON_MASTER_UPGRADE;
+      }
+      if (set.HEALTH_WITH_LEVEL != null) {
+        this.settings.healthWithLevel = set.HEALTH_WITH_LEVEL;
+      }
+      if (set.ACCEPTS_SCORE != null) {
+        this.settings.acceptsScore = set.ACCEPTS_SCORE;
+      }
+      if (set.OBSTACLE != null) {
+        this.settings.obstacle = set.OBSTACLE;
+      }
+      if (set.NECRO != null) {
+        this.settings.isNecromancer = set.NECRO;
+      }
+      if (set.AUTO_UPGRADE != null) {
+        this.settings.upgrading = set.AUTO_UPGRADE;
+      }
+      if (set.HAS_NO_RECOIL != null) {
+        this.settings.hasNoRecoil = set.HAS_NO_RECOIL;
+      }
+      if (set.CRAVES_ATTENTION != null) {
+        this.settings.attentionCraver = set.CRAVES_ATTENTION;
+      }
+      if (set.BROADCAST_MESSAGE != null) {
+        this.settings.broadcastMessage = set.BROADCAST_MESSAGE === '' ? undefined : set.BROADCAST_MESSAGE;
+      }
+      if (set.DAMAGE_CLASS != null) {
+        this.settings.damageClass = set.DAMAGE_CLASS;
+      }
+      if (set.BUFF_VS_FOOD != null) {
+        this.settings.buffVsFood = set.BUFF_VS_FOOD;
+      }
+      if (set.CAN_BE_ON_LEADERBOARD != null) {
+        this.settings.leaderboardable = set.CAN_BE_ON_LEADERBOARD;
+      }
+      if (set.INTANGIBLE != null) {
+        this.intangibility = set.INTANGIBLE;
+      }
+      if (set.IS_SMASHER != null) {
+        this.settings.reloadToAcceleration = set.IS_SMASHER;
+      }
+      if (set.STAT_NAMES != null) {
+        this.settings.skillNames = set.STAT_NAMES;
+      }
+      if (set.AI != null) {
+        this.aiSettings = set.AI;
+      }
+      if (set.DANGER != null) {
+        this.dangerValue = set.DANGER;
+      }
+      if (set.VARIES_IN_SIZE != null) {
+        this.settings.variesInSize = set.VARIES_IN_SIZE;
+        this.squiggle = this.settings.variesInSize ? ran.randomRange(0.8, 1.2) : 1;
+      }
+      if (set.RESET_UPGRADES) {
+        this.upgrades = [];
+      }
+      if (set.UPGRADES_TIER_1 != null) {
+        set.UPGRADES_TIER_1.forEach(function (e) {
+          _this16.upgrades.push({
+            "class": e,
+            level: c.TIER_1,
+            index: e.index
+          });
+        });
+      }
+      if (set.UPGRADES_TIER_2 != null) {
+        set.UPGRADES_TIER_2.forEach(function (e) {
+          _this16.upgrades.push({
+            "class": e,
+            level: c.TIER_2,
+            index: e.index
+          });
+        });
+      }
+      if (set.UPGRADES_TIER_3 != null) {
+        set.UPGRADES_TIER_3.forEach(function (e) {
+          _this16.upgrades.push({
+            "class": e,
+            level: c.TIER_3,
+            index: e.index
+          });
+        });
+      }
+      if (set.SIZE != null) {
+        this.SIZE = set.SIZE * this.squiggle;
+        if (this.coreSize == null) {
+          this.coreSize = this.SIZE;
+        }
+      }
+      if (set.SKILL != null && set.SKILL != []) {
+        if (set.SKILL.length != 10) {
+          throw 'Inappropiate skill raws.';
+        }
+        this.skill.set(set.SKILL);
+      }
+      if (set.LEVEL != null) {
+        if (set.LEVEL === -1) {
+          this.skill.reset();
+        }
+        while (this.skill.level < c.SKILL_CHEAT_CAP && this.skill.level < set.LEVEL) {
+          this.skill.score += this.skill.levelScore;
+          this.skill.maintain();
+        }
+        this.refreshBodyAttributes();
+      }
+      if (set.SKILL_CAP != null && set.SKILL_CAP != []) {
+        if (set.SKILL_CAP.length != 10) {
+          throw 'Inappropiate skill caps.';
+        }
+        this.skill.setCaps(set.SKILL_CAP);
+      }
+      if (set.VALUE != null) {
+        this.skill.score = Math.max(this.skill.score, set.VALUE * this.squiggle);
+      }
+      if (set.ALT_ABILITIES != null) {
+        this.abilities = set.ALT_ABILITIES;
+      }
+      if (set.GUNS != null) {
+        var newGuns = [];
+        set.GUNS.forEach(function (gundef) {
+          newGuns.push(new Gun(_this16, gundef));
+        });
+        this.guns = newGuns;
+      }
+      if (set.EXPLOSION_GUNS != null) {
+        var _newGuns = [];
+        set.EXPLOSION_GUNS.forEach(function (gundef) {
+          _newGuns.push(new Gun(_this16, gundef));
+        });
+        this.explosionGuns = _newGuns;
+      }
+      if (set.MAX_CHILDREN != null) {
+        this.maxChildren = set.MAX_CHILDREN;
+      }
+      if (set.FOOD != null) {
+        if (set.FOOD.LEVEL != null) {
+          this.foodLevel = set.FOOD.LEVEL;
+          this.foodCountup = 0;
+        }
+      }
+      if (set.BODY != null) {
+        if (set.BODY.ACCELERATION != null) {
+          this.ACCELERATION = set.BODY.ACCELERATION;
+        }
+        if (set.BODY.SPEED != null) {
+          this.SPEED = set.BODY.SPEED;
+        }
+        if (set.BODY.HEALTH != null) {
+          this.HEALTH = set.BODY.HEALTH;
+        }
+        if (set.BODY.RESIST != null) {
+          this.RESIST = set.BODY.RESIST;
+        }
+        if (set.BODY.SHIELD != null) {
+          this.SHIELD = set.BODY.SHIELD;
+        }
+        if (set.BODY.REGEN != null) {
+          this.REGEN = set.BODY.REGEN;
+        }
+        if (set.BODY.DAMAGE != null) {
+          this.DAMAGE = set.BODY.DAMAGE;
+        }
+        if (set.BODY.PENETRATION != null) {
+          this.PENETRATION = set.BODY.PENETRATION;
+        }
+        if (set.BODY.FOV != null) {
+          this.FOV = set.BODY.FOV;
+        }
+        if (set.BODY.RANGE != null) {
+          this.RANGE = set.BODY.RANGE;
+        }
+        if (set.BODY.SHOCK_ABSORB != null) {
+          this.SHOCK_ABSORB = set.BODY.SHOCK_ABSORB;
+        }
+        if (set.BODY.DENSITY != null) {
+          this.DENSITY = set.BODY.DENSITY;
+        }
+        if (set.BODY.STEALTH != null) {
+          this.STEALTH = set.BODY.STEALTH;
+        }
+        if (set.BODY.PUSHABILITY != null) {
+          this.PUSHABILITY = set.BODY.PUSHABILITY;
+        }
+        if (set.BODY.HETERO != null) {
+          this.heteroMultiplier = set.BODY.HETERO;
+        }
+        this.refreshBodyAttributes();
+      }
+      if (set.TURRETS != null) {
+        var o;
+        this.turrets.forEach(function (o) {
+          return o.destroy();
+        });
+        this.turrets = [];
+        set.TURRETS.forEach(function (def) {
+          o = new Entity(_this16, _this16.master);
+          (Array.isArray(def.TYPE) ? def.TYPE : [def.TYPE]).forEach(function (type) {
+            return o.define(type);
+          });
+          o.bindToMaster(def.POSITION, _this16);
+        });
+      }
+      if (set.mockup != null) {
+        this.mockup = set.mockup;
+      }
+      if (set.GLOW != null) {
+        this.glow = set.GLOW;
+        this.glowColor = set.GLOW_COLOR != null ? set.GLOW_COLOR : null;
+        this.glowSize = set.GLOW_SIZE != null ? set.GLOW_SIZE : 1;
+        this.glowBrightness = set.GLOW_BRIGHTNESS != null ? set.GLOW_BRIGHTNESS : 1;
+      }
+      if (set.IMAGE != null) {
+        this.image = set.IMAGE;
+      }
+    }
+  }, {
+    key: "refreshBodyAttributes",
+    value: function refreshBodyAttributes() {
+      var speedReduce = Math.pow(this.size / (this.coreSize || this.SIZE), 1);
+      this.acceleration = c.runSpeed * this.ACCELERATION / speedReduce;
+      if (this.settings.reloadToAcceleration) this.acceleration *= this.skill.acl;
+      this.topSpeed = c.runSpeed * this.SPEED * this.skill.mob / speedReduce;
+      if (this.settings.reloadToAcceleration) this.topSpeed /= Math.sqrt(this.skill.acl);
+      this.health.set(((this.settings.healthWithLevel ? 2 * this.skill.level : 0) + this.HEALTH) * this.skill.hlt);
+      this.health.resist = 1 - 1 / Math.max(1, this.RESIST + this.skill.brst);
+      this.shield.set(((this.settings.healthWithLevel ? 0.6 * this.skill.level : 0) + this.SHIELD) * this.skill.shi, Math.max(0, ((this.settings.healthWithLevel ? 0.006 * this.skill.level : 0) + 1) * this.REGEN * this.skill.rgn));
+      this.damage = this.DAMAGE * this.skill.atk;
+      this.penetration = this.PENETRATION + 1.5 * (this.skill.brst + 0.8 * (this.skill.atk - 1));
+      if (!this.settings.dieAtRange || !this.range) {
+        this.range = this.RANGE;
+      }
+      this.fov = this.FOV * 250 * Math.sqrt(this.size) * (1 + 0.003 * this.skill.level);
+      this.density = (1 + 0.08 * this.skill.level) * this.DENSITY;
+      this.stealth = this.STEALTH;
+      this.pushability = this.PUSHABILITY;
+    }
+  }, {
+    key: "bindToMaster",
+    value: function bindToMaster(position, bond) {
+      this.bond = bond;
+      this.source = bond;
+      this.bond.turrets.push(this);
+      this.skill = this.bond.skill;
+      this.label = this.bond.label + ' ' + this.label;
+      // It will not be in collision calculations any more nor shall it be seen.
+      this.removeFromGrid();
+      this.settings.drawShape = false;
+      // Get my position.
+      this.bound = {};
+      this.bound.size = position[0] / 20;
+      var _off = new Vector(position[1], position[2]);
+      this.bound.angle = position[3] * Math.PI / 180;
+      this.bound.direction = _off.direction;
+      this.bound.offset = _off.length / 10;
+      this.bound.arc = position[4] * Math.PI / 180;
+      // Figure out how we'll be drawn.
+      this.bound.layer = position[5];
+      // Initalize.
+      this.facing = this.bond.facing + this.bound.angle;
+      this.facingType = 'bound';
+      this.motionType = 'bound';
+      this.move();
+    }
+  }, {
+    key: "size",
+    get: function get() {
+      if (this.bond == null) return (this.coreSize || this.SIZE) * (1 + this.skill.level / 45);
+      return this.bond.size * this.bound.size;
+    }
+  }, {
+    key: "mass",
+    get: function get() {
+      return this.density * (this.size * this.size + 1);
+    }
+  }, {
+    key: "realSize",
+    get: function get() {
+      if (typeof this.shape === 'string') return this.size;
+      return this.size * (Math.abs(this.shape) > lazyRealSizes.length ? 1 : lazyRealSizes[Math.abs(this.shape)]);
+    }
+  }, {
+    key: "m_x",
+    get: function get() {
+      return (this.velocity.x + this.accel.x) / roomSpeed;
+    }
+  }, {
+    key: "m_y",
+    get: function get() {
+      return (this.velocity.y + this.accel.y) / roomSpeed;
+    }
+  }, {
+    key: "camera",
+    value: function camera() {
+      var tur = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      return {
+        type: 0 + tur * 0x01 + this.settings.drawHealth * 0x02 + (this.type === 'tank') * 0x04,
+        id: this.id,
+        index: this.index,
+        x: this.x,
+        y: this.y,
+        vx: this.velocity.x,
+        vy: this.velocity.y,
+        size: this.size,
+        rsize: this.realSize,
+        status: 1,
+        health: this.health.display(),
+        shield: this.shield.display(),
+        facing: this.facing,
+        vfacing: this.vfacing,
+        twiggle: this.facingType === 'autospin' || this.facingType === 'locksFacing' && this.control.alt,
+        layer: this.bond != null ? this.bound.layer : this.type === 'wall' ? 11 : this.type === 'food' ? 10 : this.type === 'tank' ? 5 : this.type === 'crasher' ? 1 : 0,
+        color: this.color,
+        name: this.name,
+        score: this.skill.score,
+        guns: this.guns.map(function (gun) {
+          return gun.getLastShot();
+        }),
+        turrets: this.turrets.map(function (turret) {
+          return turret.camera(true);
+        })
+      };
+    }
+  }, {
+    key: "skillUp",
+    value: function skillUp(stat) {
+      var suc = this.skill.upgrade(stat);
+      if (suc) {
+        this.refreshBodyAttributes();
+        this.guns.forEach(function (gun) {
+          gun.syncChildren();
+        });
+      }
+      return suc;
+    }
+  }, {
+    key: "upgrade",
+    value: function upgrade(number) {
+      if (number < this.upgrades.length && this.skill.level >= this.upgrades[number].level) {
+        var saveMe = this.upgrades[number]["class"];
+        this.upgrades = [];
+        this.define(saveMe);
+        this.sendMessage('You have upgraded to ' + this.label + '.');
+        var ID = this.id;
+        entities.forEach(function (instance) {
+          if (instance.settings.clearOnMasterUpgrade && instance.master.id === ID) {
+            instance.kill();
+          }
+        });
+        this.skill.update();
+        this.refreshBodyAttributes();
+      }
+    }
+  }, {
+    key: "damageMultiplier",
+    value: function damageMultiplier() {
+      switch (this.type) {
+        case 'swarm':
+          return 0.25 + 1.5 * util.clamp(this.range / (this.RANGE + 1), 0, 1);
+        default:
+          return 1;
+      }
+    }
+  }, {
+    key: "move",
+    value: function move() {
+      if (this.control.goal == null) {
+        // If we have an aim target and a motion type that needs a goal to move,
+        // fall back to chasing the target so AI-driven entities (like bosses) actually move.
+        var t = this.control.target;
+        if (t != null && (t.x !== 0 || t.y !== 0) && (this.motionType === 'motor' || this.motionType === 'chase' || this.motionType === 'swarm') && !(this.aiSettings && this.aiSettings.noChase)) {
+          this.control.goal = {
+            x: this.x + t.x,
+            y: this.y + t.y
+          };
+        } else {
+          this.control.goal = {
+            x: this.x,
+            y: this.y
+          };
+        }
+      }
+      var g = {
+          x: this.control.goal.x - this.x,
+          y: this.control.goal.y - this.y
+        },
+        gactive = g.x !== 0 || g.y !== 0,
+        engine = {
+          x: 0,
+          y: 0
+        },
+        a = this.acceleration / roomSpeed;
+      switch (this.motionType) {
+        case 'glide':
+          this.maxSpeed = this.topSpeed;
+          this.damp = 0.05;
+          break;
+        case "explosion":
+          this.SIZE += 6.5;
+        case "miniexplosion":
+          this.SIZE += 30;
+        case 'motor':
+          this.maxSpeed = 0;
+          if (this.topSpeed) {
+            this.damp = a / this.topSpeed;
+          }
+          if (gactive) {
+            var len = Math.sqrt(g.x * g.x + g.y * g.y);
+            engine = {
+              x: a * g.x / len,
+              y: a * g.y / len
+            };
+          }
+          break;
+        case 'swarm':
+          this.maxSpeed = this.topSpeed;
+          var l = util.getDistance({
+            x: 0,
+            y: 0
+          }, g) + 1;
+          if (gactive && l > this.size) {
+            var desiredxspeed = this.topSpeed * g.x / l,
+              desiredyspeed = this.topSpeed * g.y / l,
+              turning = Math.sqrt((this.topSpeed * Math.max(1, this.range) + 1) / a);
+            engine = {
+              x: (desiredxspeed - this.velocity.x) / Math.max(5, turning),
+              y: (desiredyspeed - this.velocity.y) / Math.max(5, turning)
+            };
+          } else {
+            if (this.velocity.length < this.topSpeed) {
+              engine = {
+                x: this.velocity.x * a / 20,
+                y: this.velocity.y * a / 20
+              };
+            }
+          }
+          break;
+        case 'chase':
+          if (gactive) {
+            var _l = util.getDistance({
+              x: 0,
+              y: 0
+            }, g);
+            if (_l > this.size * 2) {
+              this.maxSpeed = this.topSpeed;
+              var _desiredxspeed = this.topSpeed * g.x / _l,
+                _desiredyspeed = this.topSpeed * g.y / _l;
+              engine = {
+                x: (_desiredxspeed - this.velocity.x) * a,
+                y: (_desiredyspeed - this.velocity.y) * a
+              };
+            } else {
+              this.maxSpeed = 0;
+            }
+          } else {
+            this.maxSpeed = 0;
+          }
+          break;
+        case 'drift':
+          this.maxSpeed = 0;
+          engine = {
+            x: g.x * a,
+            y: g.y * a
+          };
+          break;
+        case 'bound':
+          var bound = this.bound,
+            ref = this.bond;
+          this.x = ref.x + ref.size * bound.offset * Math.cos(bound.direction + bound.angle + ref.facing);
+          this.y = ref.y + ref.size * bound.offset * Math.sin(bound.direction + bound.angle + ref.facing);
+          this.bond.velocity.x += bound.size * this.accel.x;
+          this.bond.velocity.y += bound.size * this.accel.y;
+          this.firingArc = [ref.facing + bound.angle, bound.arc / 2];
+          nullVector(this.accel);
+          this.blend = ref.blend;
+          break;
+      }
+      this.accel.x += engine.x * this.control.power;
+      this.accel.y += engine.y * this.control.power;
+    }
+  }, {
+    key: "face",
+    value: function face() {
+      var t = this.control.target,
+        tactive = t.x !== 0 || t.y !== 0,
+        oldFacing = this.facing;
+      switch (this.facingType) {
+        case 'autospin':
+          this.facing += 0.02 / roomSpeed;
+          break;
+        case 'turnWithSpeed':
+          this.facing += this.velocity.length / 90 * Math.PI / roomSpeed;
+          break;
+        case 'withMotion':
+          this.facing = this.velocity.direction;
+          break;
+        case 'smoothWithMotion':
+        case 'looseWithMotion':
+          this.facing += util.loopSmooth(this.facing, this.velocity.direction, 4 / roomSpeed);
+          break;
+        case 'withTarget':
+        case 'toTarget':
+          this.facing = Math.atan2(t.y, t.x);
+          break;
+        case 'locksFacing':
+          if (!this.control.alt) this.facing = Math.atan2(t.y, t.x);
+          break;
+        case 'looseWithTarget':
+        case 'looseToTarget':
+        case 'smoothToTarget':
+          this.facing += util.loopSmooth(this.facing, Math.atan2(t.y, t.x), 4 / roomSpeed);
+          break;
+        case 'bound':
+          var givenangle;
+          if (this.control.main) {
+            givenangle = Math.atan2(t.y, t.x);
+            var diff = util.angleDifference(givenangle, this.firingArc[0]);
+            if (Math.abs(diff) >= this.firingArc[1]) {
+              givenangle = this.firingArc[0]; // - util.clamp(Math.sign(diff), -this.firingArc[1], this.firingArc[1]);
+            }
+          } else {
+            givenangle = this.firingArc[0];
+          }
+          this.facing += util.loopSmooth(this.facing, givenangle, 4 / roomSpeed);
+          break;
+      }
+      // Loop
+      while (this.facing < 0) {
+        this.facing += 2 * Math.PI;
+      }
+      while (this.facing > 2 * Math.PI) {
+        this.facing -= 2 * Math.PI;
+      }
+      this.vfacing = util.angleDifference(oldFacing, this.facing) * roomSpeed;
+    }
+  }, {
+    key: "takeSelfie",
+    value: function takeSelfie() {
+      this.flattenedPhoto = null;
+      this.photo = this.settings.drawShape ? this.camera() : this.photo = undefined;
+    }
+  }, {
+    key: "physics",
+    value: function physics() {
+      if (this.accel.x == null || this.velocity.x == null) {
+        util.error('Void Error!');
+        nullVector(this.accel);
+        nullVector(this.velocity);
+      }
+      this.velocity.x += this.accel.x;
+      this.velocity.y += this.accel.y;
+      nullVector(this.accel);
+      if (Math.abs(this.velocity.x) < 0.001) this.velocity.x = 0;
+      if (Math.abs(this.velocity.y) < 0.001) this.velocity.y = 0;
+
+      // Применяем движение
+      this.stepRemaining = 1;
+      this.x += this.stepRemaining * this.velocity.x / roomSpeed;
+      this.y += this.stepRemaining * this.velocity.y / roomSpeed;
+    }
+  }, {
+    key: "friction",
+    value: function friction() {
+      var motion = this.velocity.length;
+      if (motion < 0.01) {
+        nullVector(this.velocity);
+        return;
+      }
+      var excess = motion - this.maxSpeed;
+      if (excess > 0 && this.damp) {
+        var k = this.damp / roomSpeed,
+          drag = excess / (k + 1),
+          finalvelocity = this.maxSpeed + drag;
+        this.velocity.x = finalvelocity * this.velocity.x / motion;
+        this.velocity.y = finalvelocity * this.velocity.y / motion;
+      }
+    }
+  }, {
+    key: "confinementToTheseEarthlyShackles",
+    value: function confinementToTheseEarthlyShackles() {
+      if (this.x == null || this.x == null) {
+        util.error('Void Error!');
+        util.error(this.collisionArray);
+        util.error(this.label);
+        util.error(this);
+        nullVector(this.accel);
+        nullVector(this.velocity);
+        return 0;
+      }
+      if (!this.settings.canGoOutsideRoom) {
+        this.accel.x -= Math.min(this.x - this.realSize + 50, 0) * c.ROOM_BOUND_FORCE / roomSpeed;
+        this.accel.x -= Math.max(this.x + this.realSize - room.width - 50, 0) * c.ROOM_BOUND_FORCE / roomSpeed;
+        this.accel.y -= Math.min(this.y - this.realSize + 50, 0) * c.ROOM_BOUND_FORCE / roomSpeed;
+        this.accel.y -= Math.max(this.y + this.realSize - room.height - 50, 0) * c.ROOM_BOUND_FORCE / roomSpeed;
+      }
+      if (room.gameMode === 'tdm' && this.type !== 'food') {
+        var loc = {
+          x: this.x,
+          y: this.y
+        };
+        if (this.team !== -1 && room.isIn('bas1', loc) || this.team !== -2 && room.isIn('bas2', loc) || this.team !== -3 && room.isIn('bas3', loc) || this.team !== -4 && room.isIn('bas4', loc)) {
+          this.kill();
+        }
+      }
+    }
+  }, {
+    key: "contemplationOfMortality",
+    value: function contemplationOfMortality() {
+      var _this17 = this;
+      if (this.invuln || this.immortal) {
+        this.damageRecieved = 0;
+        return 0;
+      }
+      // Life-limiting effects
+      if (this.settings.diesAtRange) {
+        this.range -= 1 / roomSpeed;
+        if (this.range < 0) {
+          this.kill();
+        }
+      }
+      if (this.settings.diesAtLowSpeed) {
+        if (!this.collisionArray.length && this.velocity.length < this.topSpeed / 2) {
+          this.health.amount -= this.health.getDamage(1 / roomSpeed);
+        }
+      }
+      // Shield regen and damage
+      if (this.shield.max) {
+        if (this.damageRecieved !== 0) {
+          var shieldDamage = this.shield.getDamage(this.damageRecieved);
+          this.damageRecieved -= shieldDamage;
+          this.shield.amount -= shieldDamage;
+        }
+      }
+      // Health damage 
+      if (this.damageRecieved !== 0) {
+        var healthDamage = this.health.getDamage(this.damageRecieved);
+        this.blend.amount = 1;
+        this.health.amount -= healthDamage;
+      }
+      this.damageRecieved = 0;
+
+      // Check for death
+      if (this.isDead()) {
+        if (this.isDominator) {
+          var _killers = [];
+          this.collisionArray.forEach(function (instance) {
+            if (instance.type === 'wall') return;
+            if (instance.master) _killers.push(instance.master);
+          });
+          var killer = _killers.find(function (k) {
+            return k.type === 'tank' && k.name !== 'Dominator';
+          }) || _killers[0];
+          if (killer) {
+            this.health.amount = this.health.max;
+            this.shield.amount = this.shield.max;
+            this.team = killer.team;
+            this.master = killer;
+            this.color = killer.color;
+            this.skill.score = 0; // Reset score to avoid instant level up issues
+            // Re-create controllers to ensure clean state
+            if (this.label === 'Trapper Dominator') {
+              this.controllers = [new io_spin(this), new io_alwaysFire(this)];
+            } else {
+              this.controllers = [new io_nearestDifferentMaster(this)];
+            }
+            this.controllers.forEach(function (c) {
+              c.tick = 10000; // Force immediate update
+            });
+            sockets.broadcast('Dominator captured by ' + (killer.name || 'An unnamed player') + '!');
+            return 0;
+          }
+        }
+        // Initalize message arrays
+        var killers = [],
+          killTools = [],
+          notJustFood = false;
+        // If I'm a tank, call me a nameless player
+        var name = this.master.name == '' ? this.master.type === 'tank' ? "a nameless player's " + this.label : this.master.type === 'miniboss' ? "a visiting " + this.label : util.addArticle(this.label) : this.master.name + "'s " + this.label;
+        // Calculate the jackpot
+        var jackpot = Math.ceil(util.getJackpot(this.skill.score) / this.collisionArray.length);
+        // Now for each of the things that kill me...
+        this.collisionArray.forEach(function (instance) {
+          if (instance.type === 'wall') return 0;
+          if (instance.master.settings.acceptsScore) {
+            // If it's not food, give its master the score
+            if (instance.master.type === 'tank' || instance.master.type === 'miniboss') notJustFood = true;
+            instance.master.skill.score += jackpot;
+            killers.push(instance.master); // And keep track of who killed me
+          } else if (instance.settings.acceptsScore) {
+            instance.skill.score += jackpot;
+          }
+          killTools.push(instance); // Keep track of what actually killed me
+        });
+        // Remove duplicates
+        killers = killers.filter(function (elem, index, self) {
+          return index == self.indexOf(elem);
+        });
+        // If there's no valid killers (you were killed by food), change the message to be more passive
+        var killText = notJustFood ? '' : "You have been killed by ",
+          dothISendAText = this.settings.givesKillMessage;
+        killers.forEach(function (instance) {
+          _this17.killCount.killers.push(instance.index);
+          if (_this17.type === 'tank') {
+            if (killers.length > 1) instance.killCount.assists++;else instance.killCount.solo++;
+          } else if (_this17.type === "miniboss") instance.killCount.bosses++;
+        });
+        // Add the killers to our death message, also send them a message
+        if (notJustFood) {
+          killers.forEach(function (instance) {
+            if (instance.master.type !== 'food' && instance.master.type !== 'crasher') {
+              killText += instance.name == '' ? killText == '' ? 'An unnamed player' : 'an unnamed player' : instance.name;
+              killText += ' and ';
+            }
+            // Only if we give messages
+            if (dothISendAText) {
+              instance.sendMessage('You killed ' + name + (killers.length > 1 ? ' (with some help).' : '.'));
+            }
+          });
+          // Prepare the next part of the next 
+          killText = killText.slice(0, -4);
+          killText += 'killed you with ';
+        }
+        // Broadcast
+        if (this.settings.broadcastMessage) sockets.broadcast(this.settings.broadcastMessage);
+        // Add the implements to the message
+        killTools.forEach(function (instance) {
+          killText += util.addArticle(instance.label) + ' and ';
+        });
+        // Prepare it and clear the collision array.
+        killText = killText.slice(0, -5);
+        if (killText === 'You have been kille') killText = 'You have died a stupid death';
+        this.sendMessage(killText + '.');
+        // If I'm the leader, broadcast it:
+        if (this.id === room.topPlayerID) {
+          var usurptText = this.name === '' ? 'The leader' : this.name;
+          if (notJustFood) {
+            usurptText += ' has been usurped by';
+            killers.forEach(function (instance) {
+              usurptText += ' ';
+              usurptText += instance.name === '' ? 'an unnamed player' : instance.name;
+              usurptText += ' and';
+            });
+            usurptText = usurptText.slice(0, -4);
+            usurptText += '!';
+          } else {
+            usurptText += ' fought a polygon... and the polygon won.';
+          }
+          sockets.broadcast(usurptText);
+        }
+        // Kill it
+        return 1;
+      }
+      return 0;
+    }
+  }, {
+    key: "protect",
+    value: function protect() {
+      entitiesToAvoid.push(this);
+      this.isProtected = true;
+    }
+  }, {
+    key: "sendMessage",
+    value: function sendMessage(message) {} // Dummy
+  }, {
+    key: "kill",
+    value: function kill() {
+      this.health.amount = -1;
+    }
+  }, {
+    key: "destroy",
+    value: function destroy() {
+      var _this18 = this;
+      // Remove from the protected entities list
+      if (this.isProtected) util.remove(entitiesToAvoid, entitiesToAvoid.indexOf(this));
+      // Remove from minimap
+      var i = minimap.findIndex(function (entry) {
+        return entry[0] === _this18.id;
+      });
+      if (i != -1) util.remove(minimap, i);
+      // Remove this from views
+      views.forEach(function (v) {
+        return v.remove(_this18);
+      });
+      // Remove from parent lists if needed
+      if (this.parent != null) util.remove(this.parent.children, this.parent.children.indexOf(this));
+      // Kill all of its children
+      var ID = this.id;
+      entities.forEach(function (instance) {
+        if (instance.source.id === _this18.id) {
+          if (instance.settings.persistsAfterDeath) {
+            instance.source = instance;
+          } else {
+            instance.kill();
+          }
+        }
+        if (instance.parent && instance.parent.id === _this18.id) {
+          instance.parent = null;
+        }
+        if (instance.master.id === _this18.id) {
+          instance.kill();
+          instance.master = instance;
+        }
+      });
+      // Remove everything bound to it
+      this.turrets.forEach(function (t) {
+        return t.destroy();
+      });
+      // Explode
+      if (this.explosionGuns != null) {
+        this.explosionGuns.forEach(function (gun) {
+          gun.fire(0, 0, _this18.skill);
+        });
+      }
+      // Remove from the collision grid
+      this.removeFromGrid();
+      this.isGhost = true;
+    }
+  }, {
+    key: "isDead",
+    value: function isDead() {
+      return this.health.amount <= 0;
+    }
+  }]);
+}();
+/*** SERVER SETUP ***/
+// Make a speed monitor
+var logs = function () {
+  var logger = function () {
+    // The two basic functions
+    function _set(obj) {
+      obj.time = util.time();
+    }
+    function _mark(obj) {
+      obj.data.push(util.time() - obj.time);
+    }
+    function _record(obj) {
+      var o = util.averageArray(obj.data);
+      obj.data = [];
+      return o;
+    }
+    function _sum(obj) {
+      var o = util.sumArray(obj.data);
+      obj.data = [];
+      return o;
+    }
+    function _tally(obj) {
+      obj.count++;
+    }
+    function _count(obj) {
+      var o = obj.count;
+      obj.count = 0;
+      return o;
+    }
+    // Return the logger creator
+    return function () {
+      var internal = {
+        data: [],
+        time: util.time(),
+        count: 0
+      };
+      // Return the new logger
+      return {
+        set: function set() {
+          return _set(internal);
+        },
+        mark: function mark() {
+          return _mark(internal);
+        },
+        record: function record() {
+          return _record(internal);
+        },
+        sum: function sum() {
+          return _sum(internal);
+        },
+        count: function count() {
+          return _count(internal);
+        },
+        tally: function tally() {
+          return _tally(internal);
+        }
+      };
+    };
+  }();
+  // Return our loggers
+  return {
+    entities: logger(),
+    collide: logger(),
+    network: logger(),
+    minimap: logger(),
+    misc2: logger(),
+    misc3: logger(),
+    physics: logger(),
+    life: logger(),
+    selfie: logger(),
+    master: logger(),
+    activation: logger(),
+    loops: logger()
+  };
+}();
+
+// Essential server requires
+var express = require('express'),
+  http = require('http'),
+  url = require('url'),
+  path = require('path'),
+  WebSocket = require('ws'),
+  app = express(),
+  fs = require('fs'),
+  exportDefintionsToClient = function () {
+    function rounder(val) {
+      if (Math.abs(val) < 0.00001) val = 0;
+      return +val.toPrecision(6);
+    }
+    // Define mocking up functions
+    function getMockup(e, positionInfo) {
+      return {
+        index: e.index,
+        name: e.label,
+        x: rounder(e.x),
+        y: rounder(e.y),
+        color: e.color,
+        shape: e.shape,
+        size: rounder(e.size),
+        realSize: rounder(e.realSize),
+        facing: rounder(e.facing),
+        layer: e.layer,
+        statnames: e.settings.skillNames,
+        position: positionInfo,
+        glow: e.glow,
+        glowColor: e.glowColor,
+        glowSize: e.glowSize,
+        glowBrightness: e.glowBrightness,
+        image: e.image,
+        guns: e.guns.map(function (gun) {
+          return {
+            offset: rounder(gun.offset),
+            direction: rounder(gun.direction),
+            length: rounder(gun.length),
+            width: rounder(gun.width),
+            aspect: rounder(gun.aspect),
+            angle: rounder(gun.angle),
+            color: gun.color,
+            gradient: gun.gradient,
+            shape: gun.gunShape
+          };
+        }),
+        turrets: e.turrets.map(function (t) {
+          var out = getMockup(t, {});
+          out.sizeFactor = rounder(t.bound.size);
+          out.offset = rounder(t.bound.offset);
+          out.direction = rounder(t.bound.direction);
+          out.layer = rounder(t.bound.layer);
+          out.angle = rounder(t.bound.angle);
+          return out;
+        })
+      };
+    }
+    function getDimensions(entities) {
+      /* Ritter's Algorithm (Okay it got serious modified for how we start it)
+      * 1) Add all the ends of the guns to our list of points needed to be bounded and a couple points for the body of the tank..
+      */
+      var endpoints = [];
+      var pointDisplay = [];
+      var _pushEndpoints = function pushEndpoints(model, scale) {
+        var focus = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {
+          x: 0,
+          y: 0
+        };
+        var rot = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+        var s = model.shape;
+        var z = 1;
+        if (typeof s !== 'string') {
+          s = Math.abs(s);
+          z = Math.abs(s) > lazyRealSizes.length ? 1 : lazyRealSizes[Math.abs(s)];
+        }
+        if (z === 1) {
+          // Body (octagon if circle)
+          for (var i = 0; i < 2; i += 0.5) {
+            endpoints.push({
+              x: focus.x + scale * Math.cos(i * Math.PI),
+              y: focus.y + scale * Math.sin(i * Math.PI)
+            });
+          }
+        } else {
+          // Body (otherwise vertices)
+          for (var _i2 = s % 2 ? 0 : Math.PI / s; _i2 < s; _i2++) {
+            var theta = _i2 / s * 2 * Math.PI;
+            endpoints.push({
+              x: focus.x + scale * z * Math.cos(theta),
+              y: focus.y + scale * z * Math.sin(theta)
+            });
+          }
+        }
+        model.guns.forEach(function (gun) {
+          var h = gun.aspect > 0 ? scale * gun.width / 2 * gun.aspect : scale * gun.width / 2;
+          var r = Math.atan2(h, scale * gun.length) + rot;
+          var l = Math.sqrt(scale * scale * gun.length * gun.length + h * h);
+          var x = focus.x + scale * gun.offset * Math.cos(gun.direction + gun.angle + rot);
+          var y = focus.y + scale * gun.offset * Math.sin(gun.direction + gun.angle + rot);
+          endpoints.push({
+            x: x + l * Math.cos(gun.angle + r),
+            y: y + l * Math.sin(gun.angle + r)
+          });
+          endpoints.push({
+            x: x + l * Math.cos(gun.angle - r),
+            y: y + l * Math.sin(gun.angle - r)
+          });
+          pointDisplay.push({
+            x: x + l * Math.cos(gun.angle + r),
+            y: y + l * Math.sin(gun.angle + r)
+          });
+          pointDisplay.push({
+            x: x + l * Math.cos(gun.angle - r),
+            y: y + l * Math.sin(gun.angle - r)
+          });
+        });
+        model.turrets.forEach(function (turret) {
+          _pushEndpoints(turret, turret.bound.size, {
+            x: turret.bound.offset * Math.cos(turret.bound.angle),
+            y: turret.bound.offset * Math.sin(turret.bound.angle)
+          }, turret.bound.angle);
+        });
+      };
+      _pushEndpoints(entities, 1);
+      // 2) Find their mass center
+      var massCenter = {
+        x: 0,
+        y: 0
+      };
+      /*endpoints.forEach(function(point) {
+          massCenter.x += point.x;
+          massCenter.y += point.y;
+      });
+      massCenter.x /= endpoints.length;
+      massCenter.y /= endpoints.length;*/
+      // 3) Choose three different points (hopefully ones very far from each other)
+      var chooseFurthestAndRemove = function chooseFurthestAndRemove(furthestFrom) {
+        var index = 0;
+        if (furthestFrom != -1) {
+          var list = new goog.structs.PriorityQueue();
+          var d;
+          for (var i = 0; i < endpoints.length; i++) {
+            var thisPoint = endpoints[i];
+            d = Math.pow(thisPoint.x - furthestFrom.x, 2) + Math.pow(thisPoint.y - furthestFrom.y, 2) + 1;
+            list.enqueue(1 / d, i);
+          }
+          index = list.dequeue();
+        }
+        var output = endpoints[index];
+        endpoints.splice(index, 1);
+        return output;
+      };
+      var point1 = chooseFurthestAndRemove(massCenter); // Choose the point furthest from the mass center
+      var point2 = chooseFurthestAndRemove(point1); // And the point furthest from that
+      // And the point which maximizes the area of our triangle (a loose look at this one)
+      var chooseBiggestTriangleAndRemove = function chooseBiggestTriangleAndRemove(point1, point2) {
+        var list = new goog.structs.PriorityQueue();
+        var index = 0;
+        var a;
+        for (var i = 0; i < endpoints.length; i++) {
+          var thisPoint = endpoints[i];
+          a = Math.pow(thisPoint.x - point1.x, 2) + Math.pow(thisPoint.y - point1.y, 2) + Math.pow(thisPoint.x - point2.x, 2) + Math.pow(thisPoint.y - point2.y, 2);
+          /* We need neither to calculate the last part of the triangle 
+          * (because it's always the same) nor divide by 2 to get the 
+          * actual area (because we're just comparing it)
+          */
+          list.enqueue(1 / a, i);
+        }
+        index = list.dequeue();
+        var output = endpoints[index];
+        endpoints.splice(index, 1);
+        return output;
+      };
+      var point3 = chooseBiggestTriangleAndRemove(point1, point2);
+      // 4) Define our first enclosing circle as the one which seperates these three furthest points
+      function circleOfThreePoints(p1, p2, p3) {
+        var x1 = p1.x;
+        var y1 = p1.y;
+        var x2 = p2.x;
+        var y2 = p2.y;
+        var x3 = p3.x;
+        var y3 = p3.y;
+        var denom = x1 * (y2 - y3) - y1 * (x2 - x3) + x2 * y3 - x3 * y2;
+        var xy1 = x1 * x1 + y1 * y1;
+        var xy2 = x2 * x2 + y2 * y2;
+        var xy3 = x3 * x3 + y3 * y3;
+        var x = (
+        // Numerator
+        xy1 * (y2 - y3) + xy2 * (y3 - y1) + xy3 * (y1 - y2)) / (2 * denom);
+        var y = (
+        // Numerator
+        xy1 * (x3 - x2) + xy2 * (x1 - x3) + xy3 * (x2 - x1)) / (2 * denom);
+        var r = Math.sqrt(Math.pow(x - x1, 2) + Math.pow(y - y1, 2));
+        var r2 = Math.sqrt(Math.pow(x - x2, 2) + Math.pow(y - y2, 2));
+        var r3 = Math.sqrt(Math.pow(x - x3, 2) + Math.pow(y - y3, 2));
+        if (r != r2 || r != r3) {
+          //util.log('somethings fucky');
+        }
+        return {
+          x: x,
+          y: y,
+          radius: r
+        };
+      }
+      var c = circleOfThreePoints(point1, point2, point3);
+      pointDisplay = [{
+        x: rounder(point1.x),
+        y: rounder(point1.y)
+      }, {
+        x: rounder(point2.x),
+        y: rounder(point2.y)
+      }, {
+        x: rounder(point3.x),
+        y: rounder(point3.y)
+      }];
+      var centerOfCircle = {
+        x: c.x,
+        y: c.y
+      };
+      var radiusOfCircle = c.radius;
+      // 5) Check to see if we enclosed everything
+      function checkingFunction() {
+        for (var i = endpoints.length; i > 0; i--) {
+          // Select the one furthest from the center of our circle and remove it
+          point1 = chooseFurthestAndRemove(centerOfCircle);
+          var vectorFromPointToCircleCenter = new Vector(centerOfCircle.x - point1.x, centerOfCircle.y - point1.y);
+          // 6) If we're still outside of this circle build a new circle which encloses the old circle and the new point
+          if (vectorFromPointToCircleCenter.length > radiusOfCircle) {
+            pointDisplay.push({
+              x: rounder(point1.x),
+              y: rounder(point1.y)
+            });
+            // Define our new point as the far side of the cirle
+            var dir = vectorFromPointToCircleCenter.direction;
+            point2 = {
+              x: centerOfCircle.x + radiusOfCircle * Math.cos(dir),
+              y: centerOfCircle.y + radiusOfCircle * Math.sin(dir)
+            };
+            break;
+          }
+        }
+        // False if we checked everything, true if we didn't
+        return !!endpoints.length;
+      }
+      var maxIterations = 100;
+      while (checkingFunction() && maxIterations-- > 0) {
+        // 7) Repeat until we enclose everything
+        centerOfCircle = {
+          x: (point1.x + point2.x) / 2,
+          y: (point1.y + point2.y) / 2
+        };
+        radiusOfCircle = Math.sqrt(Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2)) / 2;
+      }
+      if (maxIterations <= 0) {
+        util.warn('Ritter\'s Algorithm loop limit reached!');
+      }
+      // 8) Since this algorithm isn't perfect but we know our shapes are bilaterally symmetrical, we bind this circle along the x-axis to make it behave better
+      return {
+        middle: {
+          x: rounder(centerOfCircle.x),
+          y: 0
+        },
+        axis: rounder(radiusOfCircle * 2),
+        points: pointDisplay
+      };
+    }
+    // Try to load cached mockups (skip the heavy generation loop)
+    var crypto = require('crypto');
+    var cachePath = path.join(__dirname, '..', '..', '.mockups.cache.json');
+    var definitionsSrc = '';
+    try {
+      definitionsSrc = fs.readFileSync(path.join(__dirname, 'lib', 'definitions.js'), 'utf8');
+    } catch (e) {}
+    var cacheKey = crypto.createHash('sha1').update(definitionsSrc).update('\n--getMockup--\n').update(getMockup.toString()).update('\n--cacheVersion--\n2').digest('hex');
+    var writeData = null;
+    try {
+      var cached = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      if (cached && cached.key === cacheKey && typeof cached.data === 'string') {
+        writeData = cached.data;
+        util.log('Mockup cache hit, skipping generation.');
+      }
+    } catch (e) {}
+    if (writeData == null) {
+      // Save them 
+      var mockupData = [];
+      for (var k in Class) {
+        try {
+          if (!Class.hasOwnProperty(k)) continue;
+          var type = Class[k];
+          // Create a reference entities which we'll then take an image of.
+          var temptank = new Entity({
+            x: 0,
+            y: 0
+          });
+          temptank.define(type);
+          temptank.name = type.LABEL; // Rename it (for the upgrades menu).
+          // Fetch the mockup.
+          type.mockup = {
+            body: temptank.camera(true),
+            position: getDimensions(temptank)
+          };
+          // This is to pass the size information about the mockup that we didn't have until we created the mockup
+          type.mockup.body.position = type.mockup.position;
+          // Add the new data to the thing.
+          mockupData.push(getMockup(temptank, type.mockup.position));
+          // Kill the reference entities.
+          temptank.destroy();
+        } catch (error) {
+          util.error(error);
+          util.error(k);
+          util.error(Class[k]);
+        }
+      }
+      // Remove them
+      purgeEntities();
+      // Build the function to return
+      writeData = JSON.stringify(mockupData);
+      try {
+        fs.writeFileSync(cachePath, JSON.stringify({
+          key: cacheKey,
+          data: writeData
+        }));
+        util.log('Mockup cache saved to ' + cachePath);
+      } catch (e) {
+        util.warn('Could not write mockup cache: ' + e.message);
+      }
+    }
+    return function (loc) {
+      util.log('Preparing definition export.');
+      fs.writeFileSync(loc, writeData, 'utf8', function (err) {
+        if (err) return util.error(err);
+      });
+      util.log('Mockups written to ' + loc + '!');
+    };
+  }(),
+  generateVersionControlHash = function () {
+    var crypto = require('crypto');
+    var write = function () {
+      var hash = [null, null];
+      return function (loc, data, numb) {
+        // The callback is executed on reading completion
+        hash[numb] = crypto.createHash('sha1').update(data).digest('hex');
+        if (hash[0] && hash[1]) {
+          var finalHash = hash[0] + hash[1];
+          util.log('Client hash generated. Hash is "' + finalHash + '".');
+          // Write the hash to a place the client can read it.
+          fs.writeFileSync(loc, finalHash, 'utf8', function (err) {
+            if (err) return util.error(err);
+          });
+          util.log('Hash written to ' + loc + '!');
+        }
+      };
+    }();
+    return function (loc) {
+      var path1 = __dirname + '/../client/js/app.js';
+      var path2 = __dirname + '/lib/definitions.js';
+      util.log('Building client version hash, reading from ' + path1 + ' and ' + path2 + '...');
+      // Read the client application
+      fs.readFile(path1, 'utf8', function (err, data) {
+        if (err) return util.error(err);
+        util.log('app.js complete.');
+        write(loc, data, 0);
+      });
+      fs.readFile(path2, 'utf8', function (err, data) {
+        if (err) return util.error(err);
+        util.log('definitions.js complete.');
+        write(loc, data, 1);
+      });
+    };
+  }();
+
+// Give the client upon request
+exportDefintionsToClient(__dirname + '/../client/json/mockups.json');
+generateVersionControlHash(__dirname + '/../client/api/vhash');
+app.use(function (req, res, next) {
+  util.log('[EXPRESS] ' + req.method + ' ' + req.url);
+  next();
+});
+
+// Websocket behavior
+var sockets = function () {
+  var protocol = require('./lib/fasttalk');
+  var clients = [],
+    players = [],
+    bannedIPs = [],
+    suspiciousIPs = [],
+    connectedIPs = [],
+    bannedNames = ['FREE_FOOD_LUCARIO', 'FREE FOOD'];
+  return {
+    broadcast: function broadcast(message) {
+      clients.forEach(function (socket) {
+        socket.talk('m', message);
+      });
+    },
+    broadcastChat: function broadcastChat(name, text) {
+      clients.forEach(function (socket) {
+        socket.talk('H', name, text);
+      });
+    },
+    connect: function () {
+      // Define shared functions
+      // Closing the socket
+      function close(socket) {
+        // Free the IP
+        var n = connectedIPs.findIndex(function (w) {
+          return w.ip === socket.ip;
+        });
+        if (n !== -1) {
+          util.log(socket.ip + " disconnected.");
+          util.remove(connectedIPs, n);
+        }
+        // Free the token
+        if (socket.key != '' && c.TOKEN_REQUIRED) {
+          keys.push(socket.key);
+          util.log("Token freed.");
+        }
+        // Figure out who the player was
+        var player = socket.player,
+          index = players.indexOf(player);
+        // Remove the player if one was created
+        if (index != -1) {
+          // Kill the body if it exists
+          if (player.body != null) {
+            player.body.invuln = false;
+            setTimeout(function () {
+              player.body.kill();
+            }, 10000);
+          }
+          // Disconnect everything
+          util.log('[INFO] User ' + player.name + ' disconnected!');
+          util.remove(players, index);
+        } else {
+          util.log('[INFO] A player disconnected before entering the game.');
+        }
+        // Free the view
+        util.remove(views, views.indexOf(socket.view));
+        // Remove the socket
+        util.remove(clients, clients.indexOf(socket));
+        util.log('[INFO] Socket closed. Views: ' + views.length + '. Clients: ' + clients.length + '.');
+      }
+      // Banning
+      function ban(socket) {
+        if (bannedIPs.findIndex(function (ip) {
+          return ip === socket.ip;
+        }) === -1) {
+          bannedIPs.push(socket.ip);
+        } // No need for duplicates
+        socket.terminate();
+        util.warn(socket.ip + ' banned!');
+      }
+      // Being kicked 
+      function kick(socket) {
+        var reason = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'No reason given.';
+        var n = suspiciousIPs.findIndex(function (n) {
+          return n.ip === socket.ip;
+        });
+        if (n === -1) {
+          suspiciousIPs.push({
+            ip: socket.ip,
+            warns: 1
+          });
+          util.warn(reason + ' Kicking. 1 warning.');
+        } else {
+          suspiciousIPs[n].warns++;
+          util.warn(reason + ' Kicking. ' + suspiciousIPs[n].warns + ' warnings.');
+          if (suspiciousIPs[n].warns >= c.socketWarningLimit) {
+            ban(socket);
+          }
+        }
+        socket.lastWords('K');
+      }
+      // Handle incoming messages
+      function incoming(message, socket) {
+        // Only accept binary
+        if (!(message instanceof ArrayBuffer)) {
+          socket.kick('Non-binary packet.');
+          return 1;
+        }
+        // Decode it
+        var m = protocol.decode(message);
+        // Make sure it looks legit
+        if (m === -1) {
+          socket.kick('Malformed packet.');
+          return 1;
+        }
+        // Log the message request
+        socket.status.requests++;
+        // Remember who we are
+        var player = socket.player;
+        // Handle the request
+        switch (m.shift()) {
+          case 'k':
+            {
+              // key verification
+              if (m.length !== 1) {
+                socket.kick('Ill-sized key request.');
+                return 1;
+              }
+              // Get data
+              var key = m[0];
+              // Verify it
+              if (typeof key !== 'string') {
+                socket.kick('Weird key offered.');
+                return 1;
+              }
+              if (key.length > 64) {
+                socket.kick('Overly-long key offered.');
+                return 1;
+              }
+              if (socket.status.verified) {
+                socket.kick('Duplicate player spawn attempt.');
+                return 1;
+              }
+              // Otherwise proceed to check if it's available.
+              if (keys.indexOf(key) != -1 || !c.TOKEN_REQUIRED || key === 'TOKEN_KYaPZYAL2vh1yvSYYeZyH6US5bTbOGl_TOKEN') {
+                // Save the key
+                socket.key = key.substr(0, 64);
+                // Make it unavailable
+                var i = keys.indexOf(key);
+                if (i != -1) util.remove(keys, i);
+                socket.verified = true;
+                // Proceed
+                socket.talk('w', true);
+                util.log('[INFO] A socket was verified with the token: ');
+                util.log(key);
+                util.log('Clients: ' + clients.length);
+              } else {
+                // If not, kick 'em (nicely)
+                util.log('[INFO] Invalid player verification attempt.');
+                socket.lastWords('w', false);
+              }
+            }
+            break;
+          case 's':
+            {
+              // spawn request
+              if (!socket.status.deceased) {
+                socket.kick('Trying to spawn while already alive.');
+                return 1;
+              }
+              if (m.length !== 2) {
+                socket.kick('Ill-sized spawn request.');
+                return 1;
+              }
+              // Get data
+              var name = m[0].replace(c.BANNED_CHARACTERS_REGEX, '');
+              var needsRoom = m[1];
+              // Verify it
+              if (typeof name != 'string') {
+                socket.kick('Bad spawn request.');
+                return 1;
+              }
+              if (encodeURI(name).split(/%..|./).length > 48) {
+                socket.kick('Overly-long name.');
+                return 1;
+              }
+              if (needsRoom !== 0 && needsRoom !== 1) {
+                socket.kick('Bad spawn request.');
+                return 1;
+              }
+              // Bring to life
+              socket.status.deceased = false;
+              // Define the player.
+              if (players.indexOf(socket.player) != -1) {
+                util.remove(players, players.indexOf(socket.player));
+              }
+              // Free the old view
+              if (views.indexOf(socket.view) != -1) {
+                util.remove(views, views.indexOf(socket.view));
+                socket.makeView();
+              }
+              socket.player = socket.spawn(name);
+              // Give it the room state
+              if (needsRoom) {
+                socket.talk('R', room.width, room.height, JSON.stringify(c.ROOM_SETUP), JSON.stringify(util.serverStartTime), roomSpeed);
+              }
+              // Start the update rhythm immediately
+              socket.update(0);
+              // Log it    
+              util.log('[INFO] ' + m[0] + (needsRoom ? ' joined' : ' rejoined') + ' the game! Players: ' + players.length);
+            }
+            break;
+          case 'S':
+            {
+              // clock syncing
+              if (m.length !== 1) {
+                socket.kick('Ill-sized sync packet.');
+                return 1;
+              }
+              // Get data
+              var synctick = m[0];
+              // Verify it
+              if (typeof synctick !== 'number') {
+                socket.kick('Weird sync packet.');
+                return 1;
+              }
+              // Bounce it back
+              socket.talk('S', synctick, util.time());
+            }
+            break;
+          case 'p':
+            {
+              // ping
+              if (m.length !== 1) {
+                socket.kick('Ill-sized ping.');
+                return 1;
+              }
+              // Get data
+              var ping = m[0];
+              // Verify it
+              if (typeof ping !== 'number') {
+                socket.kick('Weird ping.');
+                return 1;
+              }
+              // Pong
+              socket.talk('p', m[0]); // Just pong it right back
+              socket.status.lastHeartbeat = util.time();
+            }
+            break;
+          case 'd':
+            {
+              // downlink
+              if (m.length !== 1) {
+                socket.kick('Ill-sized downlink.');
+                return 1;
+              }
+              // Get data
+              var time = m[0];
+              // Verify data
+              if (typeof time !== 'number') {
+                socket.kick('Bad downlink.');
+                return 1;
+              }
+              // The downlink indicates that the client has received an update and is now ready to receive more.
+              socket.status.receiving = 0;
+              socket.camera.ping = util.time() - time;
+              socket.camera.lastDowndate = util.time();
+              // Schedule a new update cycle
+              // Either fires immediately or however much longer it's supposed to wait per the config.
+              socket.update(Math.max(0, 1000 / c.networkUpdateFactor - (util.time() - socket.camera.lastUpdate)));
+            }
+            break;
+          case 'h':
+            {
+              // chat message
+              if (m.length !== 1) {
+                socket.kick('Ill-sized chat packet.');
+                return 1;
+              }
+              if (!socket.status.hasSpawned) {
+                return 1;
+              }
+              var text = m[0];
+              if (typeof text !== 'string') {
+                return 1;
+              }
+              text = text.replace(c.BANNED_CHARACTERS_REGEX, '').trim();
+              if (text.length === 0) {
+                return 1;
+              }
+              if (text.length > 84) {
+                text = text.slice(0, 84);
+              }
+              var now = util.time();
+              if (!socket.status.chatWindowStart || now - socket.status.chatWindowStart > 5000) {
+                socket.status.chatWindowStart = now;
+                socket.status.chatCount = 0;
+              }
+              if (socket.status.chatLastTime && now - socket.status.chatLastTime < 1500) {
+                socket.kick('Chat spam: too fast');
+                return 0;
+              }
+              if (socket.status.chatCount >= 3) {
+                socket.kick('Chat spam: flood');
+                return 0;
+              }
+              if (socket.status.chatLastText === text && now - socket.status.chatLastTime < 5000) {
+                socket.kick('Chat spam: repeat');
+                return 0;
+              }
+              socket.status.chatCount++;
+              socket.status.chatLastTime = now;
+              socket.status.chatLastText = text;
+              var _name = '';
+              if (socket.player && socket.player.body && typeof socket.player.body.name === 'string') {
+                _name = socket.player.body.name;
+              }
+              sockets.broadcastChat(_name, text);
+            }
+            break;
+          case 'C':
+            {
+              // command packet
+              if (m.length !== 3) {
+                socket.kick('Ill-sized command packet.');
+                return 1;
+              }
+              // Get data
+              var target = {
+                  x: m[0],
+                  y: m[1]
+                },
+                commands = m[2];
+              // Verify data
+              if (typeof target.x !== 'number' || typeof target.y !== 'number' || typeof commands !== 'number') {
+                socket.kick('Weird downlink.');
+                return 1;
+              }
+              if (commands > 255 || target.x !== Math.round(target.x) || target.y !== Math.round(target.y)) {
+                socket.kick('Malformed command packet.');
+                return 1;
+              }
+              // Put the new target in
+              player.target = target;
+              // Process the commands
+              var val = [false, false, false, false, false, false, false, false];
+              for (var _i3 = 7; _i3 >= 0; _i3--) {
+                if (commands >= Math.pow(2, _i3)) {
+                  commands -= Math.pow(2, _i3);
+                  val[_i3] = true;
+                }
+              }
+              player.command.up = val[0];
+              player.command.down = val[1];
+              player.command.left = val[2];
+              player.command.right = val[3];
+              player.command.lmb = val[4];
+              player.command.mmb = val[5];
+              player.command.rmb = val[6];
+              // Update the thingy 
+              socket.timeout.set(commands);
+            }
+            break;
+          case 't':
+            {
+              // player toggle
+              if (m.length !== 1) {
+                socket.kick('Ill-sized toggle.');
+                return 1;
+              }
+              // Get data
+              var given = '',
+                tog = m[0];
+              // Verify request
+              if (typeof tog !== 'number') {
+                socket.kick('Weird toggle.');
+                return 1;
+              }
+              // Decipher what we're supposed to do.
+              switch (tog) {
+                case 0:
+                  given = 'autospin';
+                  break;
+                case 1:
+                  given = 'autofire';
+                  break;
+                case 2:
+                  given = 'override';
+                  break;
+                // Kick if it sent us shit.
+                default:
+                  socket.kick('Bad toggle.');
+                  return 1;
+              }
+              // Apply a good request.
+              if (player.command != null && player.body != null) {
+                player.command[given] = !player.command[given];
+                // Send a message.
+                player.body.sendMessage(given.charAt(0).toUpperCase() + given.slice(1) + (player.command[given] ? ' enabled.' : ' disabled.'));
+              }
+            }
+            break;
+          case 'U':
+            {
+              // upgrade request
+              if (m.length !== 1) {
+                socket.kick('Ill-sized upgrade request.');
+                return 1;
+              }
+              // Get data
+              var number = m[0];
+              // Verify the request
+              if (typeof number != 'number' || number < 0) {
+                socket.kick('Bad upgrade request.');
+                return 1;
+              }
+              // Upgrade it
+              if (player.body != null) {
+                player.body.upgrade(number); // Ask to upgrade
+              }
+            }
+            break;
+          case 'x':
+            {
+              // skill upgrade request
+              if (m.length !== 1) {
+                socket.kick('Ill-sized skill request.');
+                return 1;
+              }
+              var _number = m[0],
+                stat = '';
+              // Verify the request
+              if (typeof _number != 'number') {
+                socket.kick('Weird stat upgrade request.');
+                return 1;
+              }
+              // Decipher it
+              switch (_number) {
+                case 0:
+                  stat = 'atk';
+                  break;
+                case 1:
+                  stat = 'hlt';
+                  break;
+                case 2:
+                  stat = 'spd';
+                  break;
+                case 3:
+                  stat = 'str';
+                  break;
+                case 4:
+                  stat = 'pen';
+                  break;
+                case 5:
+                  stat = 'dam';
+                  break;
+                case 6:
+                  stat = 'rld';
+                  break;
+                case 7:
+                  stat = 'mob';
+                  break;
+                case 8:
+                  stat = 'rgn';
+                  break;
+                case 9:
+                  stat = 'shi';
+                  break;
+                default:
+                  socket.kick('Unknown stat upgrade request.');
+                  return 1;
+              }
+              // Apply it
+              if (player.body != null) {
+                player.body.skillUp(stat); // Ask to upgrade a stat
+              }
+            }
+            break;
+          case 'L':
+            {
+              // level up cheat
+              if (m.length !== 0) {
+                socket.kick('Ill-sized level-up request.');
+                return 1;
+              }
+              // cheatingbois
+              if (player.body != null) {
+                if (player.body.skill.level < c.SKILL_CHEAT_CAP) {
+                  player.body.skill.score += player.body.skill.levelScore;
+                  player.body.skill.maintain();
+                  player.body.refreshBodyAttributes();
+                }
+              }
+            }
+            break;
+          case '0':
+            {
+              // testbed cheat
+              if (m.length !== 0) {
+                socket.kick('Ill-sized testbed request.');
+                return 1;
+              }
+              // cheatingbois
+              if (player.body != null) {
+                if (socket.key === 'TOKEN_KYaPZYAL2vh1yvSYYeZyH6US5bTbOGl_TOKEN') {
+                  player.body.define(Class.testbed);
+                }
+              }
+            }
+            break;
+          case 'T':
+            {
+              // teleport
+              if (m.length !== 2) {
+                socket.kick('Ill-sized teleport request.');
+                return 1;
+              }
+              // Get data
+              var x = m[0],
+                y = m[1];
+              // Verify data
+              if (typeof x !== 'number' || typeof y !== 'number') {
+                socket.kick('Bad teleport request.');
+                return 1;
+              }
+              // Teleport
+              if (player.body != null) {
+                if (socket.key === 'TOKEN_KYaPZYAL2vh1yvSYYeZyH6US5bTbOGl_TOKEN') {
+                  player.body.x += x;
+                  player.body.y += y;
+                  player.body.velocity.x = 0;
+                  player.body.velocity.y = 0;
+                }
+              }
+            }
+            break;
+          case 'P':
+            {
+              // basic tank cheat
+              if (m.length !== 0) {
+                socket.kick('Ill-sized basic tank request.');
+                return 1;
+              }
+              if (player.body != null) {
+                if (socket.key === 'TOKEN_KYaPZYAL2vh1yvSYYeZyH6US5bTbOGl_TOKEN') {
+                  player.body.upgrades = []; // Clear upgrades list
+                  player.body.define(Class.basic);
+                }
+              }
+            }
+            break;
+          case 'B':
+            {
+              // spawn bot
+              if (m.length !== 0) {
+                socket.kick('Ill-sized bot spawn request.');
+                return 1;
+              }
+              if (player.body != null) {
+                if (socket.key === 'TOKEN_KYaPZYAL2vh1yvSYYeZyH6US5bTbOGl_TOKEN') {
+                  var spot = {
+                    x: player.body.x + player.target.x,
+                    y: player.body.y + player.target.y
+                  };
+                  var bot = new Entity(spot);
+                  bot.define(Class.booster);
+                  bot.team = -100;
+                  bot.ai = {
+                    STRAFE: true
+                  };
+                  bot.name = 'Bot';
+                  bot.invuln = false;
+                  bot.facingType = 'looseToTarget';
+                  bot.color = 3;
+                  bot.addController(new io_nearestDifferentMaster(bot));
+                  bot.addController(new io_mapAltToFire(bot));
+                  bot.addController(new io_minion(bot));
+                  bot.addController(new io_fleeAtLowHealth(bot));
+                  // Level up to 45 and randomly allocate stats
+                  while (bot.skill.level < 45) {
+                    bot.skill.score += bot.skill.levelScore;
+                    bot.skill.maintain();
+                  }
+                  var stats = ['atk', 'hlt', 'spd', 'str', 'pen', 'dam', 'rld', 'mob', 'rgn', 'shi'];
+                  while (bot.skill.points > 0) {
+                    var s = ran.choose(stats);
+                    bot.skill.upgrade(s);
+                  }
+                  bot.refreshBodyAttributes();
+                }
+              }
+            }
+            break;
+          case 'V':
+            {
+              // adjust fov
+              if (m.length !== 1) {
+                socket.kick('Ill-sized FOV request.');
+                return 1;
+              }
+              var dir = m[0];
+              if (typeof dir !== 'number' || dir !== 1 && dir !== -1) {
+                socket.kick('Bad FOV request.');
+                return 1;
+              }
+              if (player.body != null) {
+                if (socket.key === 'TOKEN_KYaPZYAL2vh1yvSYYeZyH6US5bTbOGl_TOKEN') {
+                  if (player.fovScale == null) player.fovScale = 1;
+                  player.fovScale *= dir === 1 ? 1.1 : 1 / 1.1;
+                  if (player.fovScale < 0.1) player.fovScale = 0.1;
+                  if (player.fovScale > 8.0) player.fovScale = 8.0;
+                }
+              }
+            }
+            break;
+          case 'Y':
+            {
+              // adjust size
+              if (m.length !== 1) {
+                socket.kick('Ill-sized size request.');
+                return 1;
+              }
+              var _dir2 = m[0];
+              if (typeof _dir2 !== 'number' || _dir2 !== 1 && _dir2 !== -1) {
+                socket.kick('Bad size request.');
+                return 1;
+              }
+              if (player.body != null) {
+                if (socket.key === 'TOKEN_KYaPZYAL2vh1yvSYYeZyH6US5bTbOGl_TOKEN') {
+                  if (player.sizeScale == null) player.sizeScale = 1;
+                  if (player.baseSize == null) player.baseSize = player.body.SIZE;
+                  player.sizeScale *= _dir2 === 1 ? 1.1 : 1 / 1.1;
+                  if (player.sizeScale < 0.2) player.sizeScale = 0.2;
+                  if (player.sizeScale > 15.0) player.sizeScale = 15.0;
+                  player.body.SIZE = player.baseSize * player.sizeScale;
+                  player.body.coreSize = player.body.SIZE;
+                  player.body.refreshBodyAttributes();
+                }
+              }
+            }
+            break;
+          case 'I':
+            {
+              if (m.length !== 0) {
+                socket.kick('Ill-sized immortality request.');
+                return 1;
+              }
+              if (player.body != null) {
+                if (socket.key === 'TOKEN_KYaPZYAL2vh1yvSYYeZyH6US5bTbOGl_TOKEN') {
+                  if (player.body.immortal == null) player.body.immortal = false;
+                  player.body.immortal = !player.body.immortal;
+                  player.body.sendMessage(player.body.immortal ? 'God Mode Enabled!' : 'God Mode Disabled!');
+                }
+              }
+            }
+            break;
+          case 'O':
+            {
+              // suicide
+              if (m.length !== 0) {
+                socket.kick('Ill-sized suicide request.');
+                return 1;
+              }
+              if (player.body != null) {
+                if (socket.key === 'TOKEN_KYaPZYAL2vh1yvSYYeZyH6US5bTbOGl_TOKEN') {
+                  player.body.kill();
+                }
+              }
+            }
+            break;
+          case 'z':
+            {
+              // leaderboard desync report
+              if (m.length !== 0) {
+                socket.kick('Ill-sized level-up request.');
+                return 1;
+              }
+              // Flag it to get a refresh on the next cycle
+              socket.status.needsFullLeaderboard = true;
+            }
+            break;
+          default:
+            socket.kick('Bad packet index.');
+        }
+      }
+      // Monitor traffic and handle inactivity disconnects
+      function traffic(socket) {
+        var strikes = 0;
+        // This function will be called in the slow loop
+        return function () {
+          // Kick if it's d/c'd
+          if (util.time() - socket.status.lastHeartbeat > c.maxHeartbeatInterval) {
+            socket.kick('Heartbeat lost.');
+            return 0;
+          }
+          // Add a strike if there's more than 50 requests in a second
+          if (socket.status.requests > 50) {
+            strikes++;
+          } else {
+            strikes = 0;
+          }
+          // Kick if we've had 3 violations in a row
+          if (strikes > 3) {
+            socket.kick('Socket traffic volume violation!');
+            return 0;
+          }
+          // Reset the requests
+          socket.status.requests = 0;
+        };
+      }
+      // Make a function to spawn new players
+      var spawn = function () {
+        // Define guis
+        var newgui = function () {
+          // This is because I love to cheat
+          // Define a little thing that should automatically keep
+          // track of whether or not it needs to be updated
+          function floppy() {
+            var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+            var flagged = true;
+            return {
+              // The update method
+              update: function update(newValue) {
+                var eh = false;
+                if (value == null) {
+                  eh = true;
+                } else {
+                  if (_typeof(newValue) != _typeof(value)) {
+                    eh = true;
+                  }
+                  // Decide what to do based on what type it is
+                  switch (_typeof(newValue)) {
+                    case 'number':
+                    case 'string':
+                      {
+                        if (newValue !== value) {
+                          eh = true;
+                        }
+                      }
+                      break;
+                    case 'object':
+                      {
+                        if (Array.isArray(newValue)) {
+                          if (newValue.length !== value.length) {
+                            eh = true;
+                          } else {
+                            for (var i = 0, len = newValue.length; i < len; i++) {
+                              if (newValue[i] !== value[i]) eh = true;
+                            }
+                          }
+                          break;
+                        }
+                      }
+                    // jshint ignore:line
+                    default:
+                      util.error(newValue);
+                      throw new Error('Unsupported type for a floppyvar!');
+                  }
+                }
+                // Update if neeeded
+                if (eh) {
+                  flagged = true;
+                  value = newValue;
+                }
+              },
+              // The return method
+              publish: function publish() {
+                if (flagged && value != null) {
+                  flagged = false;
+                  return value;
+                }
+              }
+            };
+          }
+          // This keeps track of the skills container
+          function container(player) {
+            var vars = [],
+              skills = player.body.skill,
+              out = [],
+              statnames = ['atk', 'hlt', 'spd', 'str', 'pen', 'dam', 'rld', 'mob', 'rgn', 'shi'];
+            // Load everything (b/c I'm too lazy to do it manually)
+            statnames.forEach(function (a) {
+              vars.push(floppy());
+              vars.push(floppy());
+              vars.push(floppy());
+            });
+            return {
+              update: function update() {
+                var needsupdate = false,
+                  i = 0;
+                // Update the things
+                statnames.forEach(function (a) {
+                  vars[i++].update(skills.title(a));
+                  vars[i++].update(skills.cap(a));
+                  vars[i++].update(skills.cap(a, true));
+                });
+                /* This is a forEach and not a find because we need
+                * each floppy cyles or if there's multiple changes 
+                * (there will be), we'll end up pushing a bunch of 
+                * excessive updates long after the first and only 
+                * needed one as it slowly hits each updated value
+                */
+                vars.forEach(function (e) {
+                  if (e.publish() != null) needsupdate = true;
+                });
+                if (needsupdate) {
+                  // Update everything
+                  statnames.forEach(function (a) {
+                    out.push(skills.title(a));
+                    out.push(skills.cap(a));
+                    out.push(skills.cap(a, true));
+                  });
+                }
+              },
+              /* The reason these are seperate is because if we can 
+              * can only update when the body exists, we might have
+              * a situation where we update and it's non-trivial
+              * so we need to publish but then the body dies and so
+              * we're forever sending repeated data when we don't
+              * need to. This way we can flag it as already sent 
+              * regardless of if we had an update cycle.
+              */
+              publish: function publish() {
+                if (out.length) {
+                  var o = out.splice(0, out.length);
+                  out = [];
+                  return o;
+                }
+              }
+            };
+          }
+          // This makes a number for transmission
+          function getstuff(s) {
+            var val = 0;
+            val += 0x1 * s.amount('atk');
+            val += 0x10 * s.amount('hlt');
+            val += 0x100 * s.amount('spd');
+            val += 0x1000 * s.amount('str');
+            val += 0x10000 * s.amount('pen');
+            val += 0x100000 * s.amount('dam');
+            val += 0x1000000 * s.amount('rld');
+            val += 0x10000000 * s.amount('mob');
+            val += 0x100000000 * s.amount('rgn');
+            val += 0x1000000000 * s.amount('shi');
+            return val.toString(36);
+          }
+          // These are the methods
+          function _update(gui) {
+            var b = gui.master.body;
+            // We can't run if we don't have a body to look at
+            if (!b) return 0;
+            gui.bodyid = b.id;
+            // Update most things
+            gui.fps.update(Math.min(1, global.fps / roomSpeed / 1000 * 30));
+            gui.color.update(gui.master.teamColor);
+            gui.label.update(b.index);
+            gui.score.update(b.skill.score);
+            gui.points.update(b.skill.points);
+            // Update the upgrades
+            var upgrades = [];
+            b.upgrades.forEach(function (e) {
+              if (b.skill.level >= e.level) {
+                upgrades.push(e.index);
+              }
+            });
+            gui.upgrades.update(upgrades);
+            // Update the stats and skills
+            gui.stats.update();
+            gui.skills.update(getstuff(b.skill));
+            // Update physics
+            gui.accel.update(b.acceleration);
+            gui.topspeed.update(b.topSpeed);
+          }
+          function _publish(gui) {
+            var o = {
+              fps: gui.fps.publish(),
+              label: gui.label.publish(),
+              score: gui.score.publish(),
+              points: gui.points.publish(),
+              upgrades: gui.upgrades.publish(),
+              color: gui.color.publish(),
+              statsdata: gui.stats.publish(),
+              skills: gui.skills.publish(),
+              accel: gui.accel.publish(),
+              top: gui.topspeed.publish()
+            };
+            // Encode which we'll be updating and capture those values only
+            var oo = [0];
+            if (o.fps != null) {
+              oo[0] += 0x0001;
+              oo.push(o.fps || 1);
+            }
+            if (o.label != null) {
+              oo[0] += 0x0002;
+              oo.push(o.label);
+              oo.push(o.color || gui.master.teamColor);
+              oo.push(gui.bodyid);
+            }
+            if (o.score != null) {
+              oo[0] += 0x0004;
+              oo.push(o.score);
+            }
+            if (o.points != null) {
+              oo[0] += 0x0008;
+              oo.push(o.points);
+            }
+            if (o.upgrades != null) {
+              oo[0] += 0x0010;
+              oo.push.apply(oo, [o.upgrades.length].concat(_toConsumableArray(o.upgrades)));
+            }
+            if (o.statsdata != null) {
+              oo[0] += 0x0020;
+              oo.push.apply(oo, _toConsumableArray(o.statsdata));
+            }
+            if (o.skills != null) {
+              oo[0] += 0x0040;
+              oo.push(o.skills);
+            }
+            if (o.accel != null) {
+              oo[0] += 0x0080;
+              oo.push(o.accel);
+            }
+            if (o.top != null) {
+              oo[0] += 0x0100;
+              oo.push(o.top);
+            }
+            // Output it
+            return oo;
+          }
+          // This is the gui creator
+          return function (player) {
+            // This is the protected gui data
+            var gui = {
+              master: player,
+              fps: floppy(),
+              label: floppy(),
+              score: floppy(),
+              points: floppy(),
+              upgrades: floppy(),
+              color: floppy(),
+              skills: floppy(),
+              topspeed: floppy(),
+              accel: floppy(),
+              stats: container(player),
+              bodyid: -1
+            };
+            // This is the gui itself
+            return {
+              update: function update() {
+                return _update(gui);
+              },
+              publish: function publish() {
+                return _publish(gui);
+              }
+            };
+          };
+        }();
+        // Define the entities messaging function
+        function messenger(socket, content) {
+          socket.talk('m', content);
+        }
+        // The returned player definition function
+        return function (socket, name) {
+          var player = {},
+            loc = {};
+          // Find the desired team (if any) and from that, where you ought to spawn
+          player.team = socket.rememberedTeam;
+          switch (room.gameMode) {
+            case "tdm":
+              {
+                // Count how many others there are
+                var census = [1, 1, 1, 1],
+                  scoreCensus = [1, 1, 1, 1];
+                players.forEach(function (p) {
+                  census[p.team - 1]++;
+                  if (p.body != null) {
+                    scoreCensus[p.team - 1] += p.body.skill.score;
+                  }
+                });
+                var possiblities = [];
+                for (var i = 0, m = 0; i < 4; i++) {
+                  var v = Math.round(1000000 * (room['bas' + (i + 1)].length + 1) / (census[i] + 1) / scoreCensus[i]);
+                  if (v > m) {
+                    m = v;
+                    possiblities = [i];
+                  }
+                  if (v == m) {
+                    possiblities.push(i);
+                  }
+                }
+                // Choose from one of the least ones
+                if (player.team == null) {
+                  player.team = ran.choose(possiblities) + 1;
+                }
+                // Make sure you're in a base
+                if (room['bas' + player.team].length) do {
+                  loc = room.randomType('bas' + player.team);
+                } while (dirtyCheck(loc, 50));else do {
+                  loc = room.gaussInverse(5);
+                } while (dirtyCheck(loc, 50));
+              }
+              break;
+            default:
+              do {
+                loc = room.gaussInverse(5);
+              } while (dirtyCheck(loc, 50));
+          }
+          socket.rememberedTeam = player.team;
+          // Create and bind a body for the player host
+          var body = new Entity(loc);
+          body.protect();
+          body.define(Class.basic); // Start as a basic tank
+          body.name = name; // Define the name
+          if (socket.key === 'TOKEN_KYaPZYAL2vh1yvSYYeZyH6US5bTbOGl_TOKEN') {
+            body.name = "\u200B" + body.name;
+          }
+          // Dev hax
+          if (socket.key === '000' || socket.key === '000') {
+            body.name = "\0";
+            body.define({
+              CAN_BE_ON_LEADERBOARD: false
+            });
+          }
+          body.addController(new io_listenToPlayer(body, player)); // Make it listen
+          body.sendMessage = function (content) {
+            return messenger(socket, content);
+          }; // Make it speak
+          body.invuln = true; // Make it safe
+          player.body = body;
+          // Decide how to color and team the body
+          switch (room.gameMode) {
+            case "tdm":
+              {
+                body.team = -player.team;
+                body.color = [10, 11, 12, 15][player.team - 1];
+              }
+              break;
+            default:
+              {
+                body.color = c.RANDOM_COLORS ? ran.choose([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]) : 12; // red
+              }
+          }
+          // Decide what to do about colors when sending updates and stuff
+          player.teamColor = !c.RANDOM_COLORS && room.gameMode === 'ffa' ? 10 : body.color; // blue
+          player.fovScale = 1;
+          // Set up the targeting structure
+          player.target = {
+            x: 0,
+            y: 0
+          };
+          // Set up the command structure
+          player.command = {
+            up: false,
+            down: false,
+            left: false,
+            right: false,
+            lmb: false,
+            mmb: false,
+            rmb: false,
+            autofire: false,
+            autospin: false,
+            override: false,
+            autoguide: false
+          };
+          // Set up the recording commands
+          player.records = function () {
+            var begin = util.time();
+            return function () {
+              return [player.body.skill.score, Math.floor((util.time() - begin) / 1000), player.body.killCount.solo, player.body.killCount.assists, player.body.killCount.bosses, player.body.killCount.killers.length].concat(_toConsumableArray(player.body.killCount.killers));
+            };
+          }();
+          // Set up the player's gui
+          player.gui = newgui(player);
+          // Save the the player
+          player.socket = socket;
+          players.push(player);
+          // Focus on the new player
+          socket.camera.x = body.x;
+          socket.camera.y = body.y;
+          socket.camera.fov = 2000;
+          // Mark it as spawned
+          socket.status.hasSpawned = true;
+          body.sendMessage('You have spawned! Welcome to the game.');
+          body.sendMessage('You will be invulnerable until you move or shoot.');
+          // Move the client camera
+          socket.talk('c', socket.camera.x, socket.camera.y, socket.camera.fov);
+          return player;
+        };
+      }();
+      // Make a function that will make a function that will send out world updates
+      var eyes = function () {
+        // Define how to prepare data for submission
+        function flatten(data) {
+          var output = [data.type]; // We will remove the first entry in the persepective method
+          if (data.type & 0x01) {
+            output.push(
+            // 1: facing
+            data.facing,
+            // 2: layer 
+            data.layer);
+          } else {
+            output.push(
+            // 1: id
+            data.id,
+            // 2: index 
+            data.index,
+            // 3: x
+            data.x,
+            // 4: y
+            data.y,
+            // 5: vx
+            data.vx,
+            // 6: vy
+            data.vy,
+            // 7: size
+            data.size,
+            // 8: facing
+            data.facing,
+            // 9: vfacing
+            data.vfacing,
+            // 10: twiggle
+            data.twiggle,
+            // 11: layer
+            data.layer,
+            // 12: color
+            data.color,
+            // 13: health
+            Math.ceil(255 * data.health),
+            // 14: shield
+            Math.round(255 * data.shield));
+            if (data.type & 0x04) {
+              output.push(
+              // 15: name
+              data.name,
+              // 16: score
+              data.score);
+            }
+          }
+          // Add the gun data to the array
+          var gundata = [data.guns.length];
+          data.guns.forEach(function (lastShot) {
+            gundata.push(lastShot.time, lastShot.power);
+          });
+          output.push.apply(output, gundata);
+          // For each turret, add their own output
+          var turdata = [data.turrets.length];
+          data.turrets.forEach(function (turret) {
+            turdata.push.apply(turdata, _toConsumableArray(flatten(turret)));
+          });
+          // Push all that to the array
+          output.push.apply(output, turdata);
+          // Return it
+          return output;
+        }
+        function perspective(e, player, data) {
+          if (player.body != null) {
+            if (player.body.id === e.master.id) {
+              data = data.slice(); // So we don't mess up references to the original
+              // Set the proper color if it's on our team
+              //data[12] = player.teamColor;
+              // And make it force to our mouse if it ought to
+              if (player.command.autospin) {
+                data[10] = 1;
+              }
+            }
+          }
+          return data;
+        }
+        function _check(camera, obj) {
+          return Math.abs(obj.x - camera.x) < camera.fov * 0.6 + 1.5 * obj.size + 100 && Math.abs(obj.y - camera.y) < camera.fov * 0.6 * 0.5625 + 1.5 * obj.size + 100;
+        }
+        // The actual update world function
+        return function (socket) {
+          var lastVisibleUpdate = 0;
+          var nearby = [];
+          var x = -1000;
+          var y = -1000;
+          var fov = 0;
+          var o = {
+            add: function add(e) {
+              if (_check(socket.camera, e)) nearby.push(e);
+            },
+            remove: function remove(e) {
+              var i = nearby.indexOf(e);
+              if (i !== -1) util.remove(nearby, i);
+            },
+            check: function check(e, f) {
+              return _check(socket.camera, e);
+            },
+            //Math.abs(e.x - x) < e.size + f*fov && Math.abs(e.y - y) < e.size + f*fov; },
+            gazeUpon: function gazeUpon() {
+              logs.network.set();
+              var player = socket.player,
+                camera = socket.camera;
+              // If nothing has changed since the last update, wait (approximately) until then to update
+              var rightNow = room.lastCycle;
+              if (rightNow === camera.lastUpdate) {
+                socket.update(5 + room.cycleSpeed - util.time() + rightNow);
+                return 1;
+              }
+              // ...elseeeeee...
+              // Update the record.
+              camera.lastUpdate = rightNow;
+              // Get the socket status
+              socket.status.receiving++;
+              // Now prepare the data to emit
+              var setFov = camera.fov;
+              // If we are alive, update the camera  
+              if (player.body != null) {
+                // But I just died...
+                if (player.body.isDead()) {
+                  socket.status.deceased = true;
+                  // Let the client know it died
+                  socket.talk.apply(socket, ['F'].concat(_toConsumableArray(player.records())));
+                  // Remove the body
+                  player.body = null;
+                }
+                // I live!
+                else if (player.body.photo) {
+                  // Update camera position and motion
+                  camera.x = player.body.photo.x;
+                  camera.y = player.body.photo.y;
+                  camera.vx = player.body.photo.vx;
+                  camera.vy = player.body.photo.vy;
+                  // Get what we should be able to see     
+                  setFov = player.body.fov * (player.fovScale || 1);
+                  // Get our body id
+                  player.viewId = player.body.id;
+                }
+              }
+              if (player.body == null) {
+                // u dead bro
+                setFov = 2000;
+              }
+              // Smoothly transition view size
+              camera.fov += Math.max((setFov - camera.fov) / 30, setFov - camera.fov);
+              // Update my stuff
+              x = camera.x;
+              y = camera.y;
+              fov = camera.fov;
+              // Find what the user can see.
+              // Update which entities are nearby
+              if (camera.lastUpdate - lastVisibleUpdate > c.visibleListInterval) {
+                // Update our timer
+                lastVisibleUpdate = camera.lastUpdate;
+                // And update the nearby list
+                nearby = entities.map(function (e) {
+                  if (_check(socket.camera, e)) return e;
+                }).filter(function (e) {
+                  return e;
+                });
+              }
+              // Look at our list of nearby entities and get their updates
+              var visible = nearby.map(function mapthevisiblerealm(e) {
+                if (e.photo) {
+                  if (Math.abs(e.x - x) < fov / 2 + 1.5 * e.size && Math.abs(e.y - y) < fov / 2 * (9 / 16) + 1.5 * e.size) {
+                    // Grab the photo
+                    if (!e.flattenedPhoto) e.flattenedPhoto = flatten(e.photo);
+                    return perspective(e, player, e.flattenedPhoto);
+                  }
+                }
+              }).filter(function (e) {
+                return e;
+              });
+              // Spread it for upload
+              var numberInView = visible.length,
+                view = [];
+              visible.forEach(function (e) {
+                view.push.apply(view, _toConsumableArray(e));
+              });
+              // Update the gui
+              player.gui.update();
+              // Send it to the player
+              socket.talk.apply(socket, ['u', rightNow, camera.x, camera.y, setFov, camera.vx, camera.vy].concat(_toConsumableArray(player.gui.publish()), [numberInView], view));
+              // Queue up some for the front util.log if needed
+              if (socket.status.receiving < c.networkFrontlog) {
+                socket.update(Math.max(0, 1000 / c.networkUpdateFactor - (camera.lastDowndate - camera.lastUpdate), camera.ping / c.networkFrontlog));
+              } else {
+                socket.update(c.networkFallbackTime);
+              }
+              logs.network.mark();
+            }
+          };
+          views.push(o);
+          return o;
+        };
+      }();
+      // Make a function that will send out minimap
+      // and leaderboard updates. We'll also start 
+      // the mm/lb updating loop here. It runs at 1Hz
+      // and also kicks inactive sockets
+      var broadcast = function () {
+        // This is the public information we need for broadcasting
+        var readmap, readlb;
+        // Define fundamental functions
+        var getminimap = function () {
+          // Build a map cleaner
+          var cleanmapreader = function () {
+            function flattener() {
+              var internalmap = [];
+              // Define the flattener
+              function flatten(data) {
+                // In case it's all filtered away, we'll still have something to work with
+                if (data == null) data = [];
+                var out = [data.length];
+                // Push it flat
+                data.forEach(function (d) {
+                  return out.push.apply(out, _toConsumableArray(d));
+                });
+                return out;
+              }
+              // Make a test function
+              function challenge(value, challenger) {
+                return value[1] === challenger[0] && value[2] === challenger[1] && value[3] === challenger[2];
+              }
+              // Return our functions
+              return {
+                update: function update(data) {
+                  // Flag all old data as to be removed
+                  internalmap.forEach(function (e) {
+                    return e[0] = -1;
+                  });
+                  // Round all the old data
+                  data = data.map(function (d) {
+                    return [Math.round(255 * util.clamp(d[0] / room.width, 0, 1)), Math.round(255 * util.clamp(d[1] / room.height, 0, 1)), d[2]];
+                  });
+                  // Add new data and stabilze existing data, then emove old data
+                  data.forEach(function (d) {
+                    // Find if it's already there
+                    var i = internalmap.findIndex(function (e) {
+                      return challenge(e, d);
+                    });
+                    if (i === -1) {
+                      // if not add it
+                      internalmap.push([1].concat(_toConsumableArray(d)));
+                    } else {
+                      // if so, flag it as stable
+                      internalmap[i][0] = 0;
+                    }
+                  });
+                  // Export all new and old data
+                  var ex = internalmap.filter(function (e) {
+                    return e[0] !== 0;
+                  });
+                  // Remove outdated data
+                  internalmap = internalmap.filter(function (e) {
+                    return e[0] !== -1;
+                  });
+                  // Flatten the exports
+                  var f = flatten(ex);
+                  return f;
+                },
+                exportall: function exportall() {
+                  // Returns a flattened version of the map with blanket add requests
+                  return flatten(internalmap.map(function (e) {
+                    return [1, e[1], e[2], e[3]];
+                  }));
+                }
+              };
+            }
+            // Define the function
+            return room.gameMode === 'ffa' ?
+            // ffa function builder
+            function () {
+              // Make flatteners
+              var publicmap = flattener();
+              // Return the function
+              return function () {
+                // Updates
+                var clean = publicmap.update(minimap.map(function (entry) {
+                  return [entry[1], entry[2], entry[4] === 'miniboss' ? entry[3] : 17];
+                }));
+                var full = publicmap.exportall();
+                // Reader
+                return function (team) {
+                  var everything = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+                  return everything ? full : clean;
+                };
+              };
+            }() :
+            // tdm function builder
+            function () {
+              // Make flatteners
+              var team1map = flattener();
+              var team2map = flattener();
+              var team3map = flattener();
+              var team4map = flattener();
+              // Return the function
+              return function () {
+                var clean = [team1map.update(minimap.map(function (entry) {
+                  return [entry[1], entry[2], entry[4] === 'miniboss' || entry[4] === 'tank' && entry[5] === -1 ? entry[3] : 17];
+                })), team2map.update(minimap.map(function (entry) {
+                  return [entry[1], entry[2], entry[4] === 'miniboss' || entry[4] === 'tank' && entry[5] === -2 ? entry[3] : 17];
+                })), team3map.update(minimap.map(function (entry) {
+                  return [entry[1], entry[2], entry[4] === 'miniboss' || entry[4] === 'tank' && entry[5] === -3 ? entry[3] : 17];
+                })), team4map.update(minimap.map(function (entry) {
+                  return [entry[1], entry[2], entry[4] === 'miniboss' || entry[4] === 'tank' && entry[5] === -4 ? entry[3] : 17];
+                }))];
+                var full = [team1map.exportall(), team2map.exportall(), team3map.exportall(), team4map.exportall()];
+                // The reader
+                return function (team) {
+                  var everything = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+                  return everything ? full[team - 1] : clean[team - 1];
+                };
+              };
+            }();
+          }();
+          // Return the builder function. This itself returns 
+          // a reader for the map (will change based on team)
+          return function () {
+            // Update the minimap
+            entities.forEach(function (my) {
+              if (my.settings.drawShape && ran.dice(my.stealth * c.STEALTH)) {
+                var i = minimap.findIndex(function (entry) {
+                  return entry[0] === my.id;
+                });
+                if (i != -1) {
+                  // update position
+                  minimap[i] = [my.id, my.x, my.y, my.color, my.type, my.team];
+                } else {
+                  // add position
+                  minimap.push([my.id, my.x, my.y, my.color, my.type, my.team]);
+                }
+              }
+            });
+            // Clean the map and return the reader
+            return cleanmapreader();
+          };
+        }();
+        var getleaderboard = function () {
+          var lb = {
+            full: [],
+            updates: []
+          };
+          // We'll reuse these lists over and over again
+          var list = new goog.structs.PriorityQueue();
+          // This puts things in the data structure
+          function listify(instance) {
+            if (instance.settings.leaderboardable && instance.settings.drawShape && (instance.type === 'tank' || instance.killCount.solo || instance.killCount.assists)) {
+              list.enqueue(1 / (instance.skill.score + 1), instance);
+            }
+          }
+          // Build a function to prepare for export
+          var flatten = function () {
+            var leaderboard = {};
+            // Define our index manager
+            var indices = function () {
+              var data = [],
+                removed = [];
+              // Provide the index manager methods
+              return {
+                flag: function flag() {
+                  data.forEach(function (index) {
+                    index.status = -1;
+                  });
+                  if (data == null) {
+                    data = [];
+                  }
+                },
+                cull: function cull() {
+                  removed = [];
+                  data = data.filter(function (index) {
+                    var doit = index.status === -1;
+                    if (doit) removed.push(index.id);
+                    return !doit;
+                  });
+                  return removed;
+                },
+                add: function add(id) {
+                  data.push({
+                    id: id,
+                    status: 1
+                  });
+                },
+                stabilize: function stabilize(id) {
+                  data[data.findIndex(function (index) {
+                    return index.id === id;
+                  })].status = 0;
+                }
+              };
+            }();
+            // This processes it
+            var process = function () {
+              // A helpful thing
+              function barcolor(entry) {
+                switch (entry.team) {
+                  case -100:
+                    return entry.color;
+                  case -1:
+                    return 10;
+                  case -2:
+                    return 11;
+                  case -3:
+                    return 12;
+                  case -4:
+                    return 15;
+                  default:
+                    {
+                      if (room.gameMode === 'tdm') return entry.color;
+                      return 11;
+                    }
+                }
+              }
+              // A shared (and protected) thing
+              function getfull(entry) {
+                return [-entry.id, Math.round(entry.skill.score), entry.index, entry.name, entry.color, barcolor(entry)];
+              }
+              return {
+                normal: function normal(entry) {
+                  // Check if the entry is already there
+                  var id = entry.id,
+                    score = Math.round(entry.skill.score);
+                  var lb = leaderboard['_' + id];
+                  if (lb != null) {
+                    // Unflag it for removal
+                    indices.stabilize(id);
+                    // Figure out if we need to update anything
+                    if (lb.score !== score || lb.index !== entry.index) {
+                      // If so, update our record first
+                      lb.score = score;
+                      lb.index = entry.index;
+                      // Return it for broadcasting
+                      return [id, score, entry.index];
+                    }
+                  } else {
+                    // Record it
+                    indices.add(id);
+                    leaderboard['_' + id] = {
+                      score: score,
+                      name: entry.name,
+                      index: entry.index,
+                      color: entry.color,
+                      bar: barcolor(entry)
+                    };
+                    // Return it for broadcasting
+                    return getfull(entry);
+                  }
+                },
+                full: function full(entry) {
+                  return getfull(entry);
+                }
+              };
+            }();
+            // The flattening functions
+            return function (data) {
+              // Start
+              indices.flag();
+              // Flatten the orders
+              var orders = data.map(process.normal).filter(function (e) {
+                  return e;
+                }),
+                refresh = data.map(process.full).filter(function (e) {
+                  return e;
+                }),
+                flatorders = [],
+                flatrefresh = [];
+              orders.forEach(function (e) {
+                return flatorders.push.apply(flatorders, _toConsumableArray(e));
+              });
+              refresh.forEach(function (e) {
+                return flatrefresh.push.apply(flatrefresh, _toConsumableArray(e));
+              });
+              // Find the stuff to remove
+              var removed = indices.cull();
+              // Make sure we sync the leaderboard
+              removed.forEach(function (id) {
+                delete leaderboard['_' + id];
+              });
+              return {
+                updates: [removed.length].concat(_toConsumableArray(removed), [orders.length], flatorders),
+                full: [-1, refresh.length].concat(flatrefresh) // The -1 tells the client it'll be a full refresh
+              };
+            };
+          }();
+          // The update function (returns a reader)
+          return function () {
+            list.clear();
+            // Sort everything
+            entities.forEach(listify);
+            // Get the top ten
+            var topTen = [];
+            for (var i = 0; i < 10; i++) {
+              // Only if there's anything in the list of course
+              if (list.getCount()) {
+                topTen.push(list.dequeue());
+              } else {
+                break;
+              }
+            }
+            topTen = topTen.filter(function (e) {
+              return e;
+            });
+            room.topPlayerID = topTen.length ? topTen[0].id : -1;
+            // Remove empty values and process it
+            lb = flatten(topTen);
+            // Return the reader
+            return function () {
+              var full = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+              return full ? lb.full : lb.updates;
+            };
+          };
+        }();
+        // Define a 1 Hz update loop
+        function slowloop() {
+          // Build the minimap
+          logs.minimap.set();
+          readmap = getminimap();
+          // Build the leaderboard
+          readlb = getleaderboard();
+          logs.minimap.mark();
+          // Check sockets
+          var time = util.time();
+          clients.forEach(function (socket) {
+            if (socket.timeout.check(time)) socket.kick('Kicked for inactivity.');
+            if (time - socket.statuslastHeartbeat > c.maxHeartbeatInterval) socket.kick('Lost heartbeat.');
+          });
+        }
+        // Start it
+        setInterval(slowloop, 1000);
+        // Give the broadcast method
+        return function (socket) {
+          // Make sure it's spawned first
+          if (socket.status.hasSpawned) {
+            var m = [0],
+              lb = [0, 0];
+            m = readmap(socket.player.team, socket.status.needsFullMap);
+            socket.status.needsFullMap = false;
+            lb = readlb(socket.status.needsFullLeaderboard);
+            socket.status.needsFullLeaderboard = false;
+            // Don't broadcast if you don't need to
+            if (m !== [0] || lb !== [0, 0]) {
+              socket.talk.apply(socket, ['b'].concat(_toConsumableArray(m), _toConsumableArray(lb)));
+            }
+          }
+        };
+      }();
+      // Build the returned function
+      // This function initalizes the socket upon connection
+      return function (socket, req) {
+        // Get information about the new connection and verify it
+        if (c.servesStatic || req.connection.remoteAddress === '::ffff:127.0.0.1' || req.connection.remoteAddress === '::1') {
+          socket.ip = req.headers['x-forwarded-for'];
+          // Make sure we're not banned...
+          if (bannedIPs.findIndex(function (ip) {
+            return ip === socket.ip;
+          }) !== -1) {
+            socket.terminate();
+            return 1;
+          }
+          // Make sure we're not already connected...
+          if (!c.servesStatic) {
+            var n = connectedIPs.findIndex(function (w) {
+              return w.ip === socket.ip;
+            });
+            if (n !== -1) {
+              // Don't allow more than 2
+              if (connectedIPs[n].number > 1) {
+                util.warn('Too many connections from the same IP. [' + socket.ip + ']');
+                socket.terminate();
+                return 1;
+              } else connectedIPs[n].number++;
+            } else connectedIPs.push({
+              ip: socket.ip,
+              number: 1
+            });
+          }
+        } else {
+          // Don't let banned IPs connect.
+          util.warn(req.connection.remoteAddress);
+          util.warn(req.headers['x-forwarded-for']);
+          socket.terminate();
+          util.warn('Inappropiate connection request: header spoofing. Socket terminated.');
+          return 1;
+        }
+        util.log(socket.ip + ' is trying to connect...');
+        // Set it up
+        socket.binaryType = 'arraybuffer';
+        socket.key = '';
+        socket.player = {
+          camera: {}
+        };
+        socket.timeout = function () {
+          var mem = 0;
+          var timer = 0;
+          return {
+            set: function set(val) {
+              if (mem !== val) {
+                mem = val;
+                timer = util.time();
+              }
+            },
+            check: function check(time) {
+              return timer && time - timer > c.maxHeartbeatInterval;
+            }
+          };
+        }();
+        // Set up the status container
+        socket.status = {
+          verified: false,
+          receiving: 0,
+          deceased: true,
+          requests: 0,
+          hasSpawned: false,
+          needsFullMap: true,
+          needsFullLeaderboard: true,
+          lastHeartbeat: util.time(),
+          chatWindowStart: 0,
+          chatCount: 0,
+          //ужас<-------
+          chatLastTime: 0,
+          chatLastText: ''
+        };
+        // Set up loops
+        socket.loops = function () {
+          var nextUpdateCall = null; // has to be started manually
+          var trafficMonitoring = setInterval(function () {
+            return traffic(socket);
+          }, 1500);
+          var broadcastingGuiStuff = setInterval(function () {
+            return broadcast(socket);
+          }, 1000);
+          // Return the loop methods
+          return {
+            setUpdate: function setUpdate(timeout) {
+              nextUpdateCall = timeout;
+            },
+            cancelUpdate: function cancelUpdate() {
+              clearTimeout(nextUpdateCall);
+            },
+            terminate: function terminate() {
+              clearTimeout(nextUpdateCall);
+              clearTimeout(trafficMonitoring);
+              clearTimeout(broadcastingGuiStuff);
+            }
+          };
+        }();
+        // Set up the camera
+        socket.camera = {
+          x: undefined,
+          y: undefined,
+          vx: 0,
+          vy: 0,
+          lastUpdate: util.time(),
+          lastDowndate: undefined,
+          fov: 2000
+        };
+        // Set up the viewer
+        socket.makeView = function () {
+          socket.view = eyes(socket);
+        };
+        socket.makeView();
+        // Put the fundamental functions in the socket
+        socket.ban = function () {
+          return ban(socket);
+        };
+        socket.kick = function (reason) {
+          return kick(socket, reason);
+        };
+        socket.talk = function () {
+          if (socket.readyState === socket.OPEN) {
+            for (var _len = arguments.length, message = new Array(_len), _key = 0; _key < _len; _key++) {
+              message[_key] = arguments[_key];
+            }
+            socket.send(protocol.encode(message), {
+              binary: true
+            });
+          }
+        };
+        socket.lastWords = function () {
+          if (socket.readyState === socket.OPEN) {
+            for (var _len2 = arguments.length, message = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+              message[_key2] = arguments[_key2];
+            }
+            socket.send(protocol.encode(message), {
+              binary: true
+            }, function () {
+              return setTimeout(function () {
+                return socket.terminate();
+              }, 1000);
+            });
+          }
+        };
+        socket.on('message', function (message) {
+          return incoming(message, socket);
+        });
+        socket.on('close', function () {
+          socket.loops.terminate();
+          close(socket);
+        });
+        socket.on('error', function (e) {
+          util.log('[ERROR]:');
+          util.error(e);
+        });
+        // Put the player functions in the socket
+        socket.spawn = function (name) {
+          return spawn(socket, name);
+        };
+        // And make an update
+        socket.update = function (time) {
+          socket.loops.cancelUpdate();
+          socket.loops.setUpdate(setTimeout(function () {
+            socket.view.gazeUpon();
+          }, time));
+        };
+        // Log it
+        clients.push(socket);
+        util.log('[INFO] New socket opened with ', socket.ip);
+      };
+    }()
+  };
+}();
+
+/**** GAME SETUP ****/
+// Define how the game lives
+// The most important loop. Fast looping.
+var gameloop = function () {
+  // Collision stuff
+  var collide = function () {
+    function simplecollide(my, n) {
+      var diff = (1 + util.getDistance(my, n) / 2) * roomSpeed;
+      var a = my.intangibility ? 1 : my.pushability,
+        b = n.intangibility ? 1 : n.pushability,
+        c = 0.05 * (my.x - n.x) / diff,
+        d = 0.05 * (my.y - n.y) / diff;
+      my.accel.x += a / (b + 0.3) * c;
+      my.accel.y += a / (b + 0.3) * d;
+      n.accel.x -= b / (a + 0.3) * c;
+      n.accel.y -= b / (a + 0.3) * d;
+    }
+    function firmcollide(my, n) {
+      var buffer = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+      var item1 = {
+        x: my.x + my.m_x,
+        y: my.y + my.m_y
+      };
+      var item2 = {
+        x: n.x + n.m_x,
+        y: n.y + n.m_y
+      };
+      var dist = util.getDistance(item1, item2);
+      var s1 = Math.max(my.velocity.length, my.topSpeed);
+      var s2 = Math.max(n.velocity.length, n.topSpeed);
+      var strike1, strike2;
+      if (buffer > 0 && dist <= my.realSize + n.realSize + buffer) {
+        var repel = (my.acceleration + n.acceleration) * (my.realSize + n.realSize + buffer - dist) / buffer / roomSpeed;
+        my.accel.x += repel * (item1.x - item2.x) / dist;
+        my.accel.y += repel * (item1.y - item2.y) / dist;
+        n.accel.x -= repel * (item1.x - item2.x) / dist;
+        n.accel.y -= repel * (item1.y - item2.y) / dist;
+      }
+      while (dist <= my.realSize + n.realSize && !(strike1 && strike2)) {
+        strike1 = false;
+        strike2 = false;
+        if (my.velocity.length <= s1) {
+          my.velocity.x -= 0.05 * (item2.x - item1.x) / dist / roomSpeed;
+          my.velocity.y -= 0.05 * (item2.y - item1.y) / dist / roomSpeed;
+        } else {
+          strike1 = true;
+        }
+        if (n.velocity.length <= s2) {
+          n.velocity.x += 0.05 * (item2.x - item1.x) / dist / roomSpeed;
+          n.velocity.y += 0.05 * (item2.y - item1.y) / dist / roomSpeed;
+        } else {
+          strike2 = true;
+        }
+        item1 = {
+          x: my.x + my.m_x,
+          y: my.y + my.m_y
+        };
+        item2 = {
+          x: n.x + n.m_x,
+          y: n.y + n.m_y
+        };
+        dist = util.getDistance(item1, item2);
+      }
+    }
+    function reflectcollide(wall, bounce) {
+      var delt = new Vector(wall.x - bounce.x, wall.y - bounce.y);
+      var dist = delt.length;
+      var diff = wall.size + bounce.size - dist;
+      if (diff > 0) {
+        bounce.accel.x -= diff * delt.x / dist;
+        bounce.accel.y -= diff * delt.y / dist;
+        return 1;
+      }
+      return 0;
+    }
+    function advancedcollide(my, n, doDamage, doInelastic) {
+      var nIsFirmCollide = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : false;
+      // Prepare to check
+      var tock = Math.min(my.stepRemaining, n.stepRemaining),
+        combinedRadius = n.size + my.size,
+        motion = {
+          _me: new Vector(my.m_x, my.m_y),
+          _n: new Vector(n.m_x, n.m_y)
+        },
+        delt = new Vector(tock * (motion._me.x - motion._n.x), tock * (motion._me.y - motion._n.y)),
+        diff = new Vector(my.x - n.x, my.y - n.y),
+        dir = new Vector((n.x - my.x) / diff.length, (n.y - my.y) / diff.length),
+        component = Math.max(0, dir.x * delt.x + dir.y * delt.y);
+      if (component >= diff.length - combinedRadius) {
+        // A simple check
+        // A more complex check
+        var goahead = false,
+          tmin = 1 - tock,
+          tmax = 1,
+          A = Math.pow(delt.x, 2) + Math.pow(delt.y, 2),
+          B = 2 * delt.x * diff.x + 2 * delt.y * diff.y,
+          C = Math.pow(diff.x, 2) + Math.pow(diff.y, 2) - Math.pow(combinedRadius, 2),
+          det = B * B - 4 * A * C,
+          t;
+        if (!A || det < 0 || C < 0) {
+          // This shall catch mathematical errors
+          t = 0;
+          if (C < 0) {
+            // We have already hit without moving
+            goahead = true;
+          }
+        } else {
+          var t1 = (-B - Math.sqrt(det)) / (2 * A),
+            t2 = (-B + Math.sqrt(det)) / (2 * A);
+          if (t1 < tmin || t1 > tmax) {
+            // 1 is out of range
+            if (t2 < tmin || t2 > tmax) {
+              // 2 is out of range;
+              t = false;
+            } else {
+              // 1 is out of range but 2 isn't
+              t = t2;
+              goahead = true;
+            }
+          } else {
+            // 1 is in range
+            if (t2 >= tmin && t2 <= tmax) {
+              // They're both in range!
+              t = Math.min(t1, t2);
+              goahead = true; // That means it passed in and then out again.  Let's use when it's going in
+            } else {
+              // Only 1 is in range
+              t = t1;
+              goahead = true;
+            }
+          }
+        }
+        /********* PROCEED ********/
+        if (goahead) {
+          // Add to record
+          my.collisionArray.push(n);
+          n.collisionArray.push(my);
+          if (t) {
+            // Only if we still need to find the collision
+            // Step to where the collision occured
+            my.x += motion._me.x * t;
+            my.y += motion._me.y * t;
+            n.x += motion._n.x * t;
+            n.y += motion._n.y * t;
+            my.stepRemaining -= t;
+            n.stepRemaining -= t;
+
+            // Update things
+            diff = new Vector(my.x - n.x, my.y - n.y);
+            dir = new Vector((n.x - my.x) / diff.length, (n.y - my.y) / diff.length);
+            component = Math.max(0, dir.x * delt.x + dir.y * delt.y);
+          }
+          var componentNorm = component / delt.length;
+          /************ APPLY COLLISION ***********/
+          // Prepare some things
+          var reductionFactor = 1,
+            deathFactor = {
+              _me: 1,
+              _n: 1
+            },
+            accelerationFactor = delt.length ? combinedRadius / 4 / (Math.floor(combinedRadius / delt.length) + 1) : 0.001,
+            depth = {
+              _me: util.clamp((combinedRadius - diff.length) / (2 * my.size), 0, 1),
+              //1: I am totally within it
+              _n: util.clamp((combinedRadius - diff.length) / (2 * n.size), 0, 1) //1: It is totally within me
+            },
+            combinedDepth = {
+              up: depth._me * depth._n,
+              down: (1 - depth._me) * (1 - depth._n)
+            },
+            pen = {
+              _me: {
+                sqr: Math.pow(my.penetration, 2),
+                sqrt: Math.sqrt(my.penetration)
+              },
+              _n: {
+                sqr: Math.pow(n.penetration, 2),
+                sqrt: Math.sqrt(n.penetration)
+              }
+            },
+            savedHealthRatio = {
+              _me: my.health.ratio,
+              _n: n.health.ratio
+            };
+          if (doDamage) {
+            var speedFactor = {
+              // Avoid NaNs and infinities
+              _me: my.maxSpeed ? Math.pow(motion._me.length / my.maxSpeed, 0.25) : 1,
+              _n: n.maxSpeed ? Math.pow(motion._n.length / n.maxSpeed, 0.25) : 1
+            };
+
+            /********** DO DAMAGE *********/
+            var bail = false;
+            if (my.shape === n.shape && my.settings.isNecromancer && n.type === 'food') {
+              bail = my.necro(n);
+            } else if (my.shape === n.shape && n.settings.isNecromancer && my.type === 'food') {
+              bail = n.necro(my);
+            }
+            if (!bail) {
+              // Calculate base damage
+              var resistDiff = my.health.resist - n.health.resist,
+                damage = {
+                  _me: c.DAMAGE_CONSTANT * my.damage * (1 + resistDiff) * (1 + n.heteroMultiplier * (my.settings.damageClass === n.settings.damageClass)) * (my.settings.buffVsFood && n.settings.damageType === 1 ? 3 : 1) * my.damageMultiplier() * Math.min(2, Math.max(speedFactor._me, 1) * speedFactor._me),
+                  _n: c.DAMAGE_CONSTANT * n.damage * (1 - resistDiff) * (1 + my.heteroMultiplier * (my.settings.damageClass === n.settings.damageClass)) * (n.settings.buffVsFood && my.settings.damageType === 1 ? 3 : 1) * n.damageMultiplier() * Math.min(2, Math.max(speedFactor._n, 1) * speedFactor._n)
+                };
+              // Advanced damage calculations
+              if (my.settings.ratioEffects) {
+                damage._me *= Math.min(1, Math.pow(Math.max(my.health.ratio, my.shield.ratio), 1 / my.penetration));
+              }
+              if (n.settings.ratioEffects) {
+                damage._n *= Math.min(1, Math.pow(Math.max(n.health.ratio, n.shield.ratio), 1 / n.penetration));
+              }
+              if (my.settings.damageEffects) {
+                damage._me *= accelerationFactor * (1 + (componentNorm - 1) * (1 - depth._n) / my.penetration) * (1 + pen._n.sqrt * depth._n - depth._n) / pen._n.sqrt;
+              }
+              if (n.settings.damageEffects) {
+                damage._n *= accelerationFactor * (1 + (componentNorm - 1) * (1 - depth._me) / n.penetration) * (1 + pen._me.sqrt * depth._me - depth._me) / pen._me.sqrt;
+              }
+              // Find out if you'll die in this cycle, and if so how much damage you are able to do to the other target
+              var damageToApply = {
+                _me: damage._me,
+                _n: damage._n
+              };
+              if (n.shield.max) {
+                damageToApply._me -= n.shield.getDamage(damageToApply._me);
+              }
+              if (my.shield.max) {
+                damageToApply._n -= my.shield.getDamage(damageToApply._n);
+              }
+              var stuff = my.health.getDamage(damageToApply._n, false);
+              deathFactor._me = stuff > my.health.amount ? my.health.amount / stuff : 1;
+              stuff = n.health.getDamage(damageToApply._me, false);
+              deathFactor._n = stuff > n.health.amount ? n.health.amount / stuff : 1;
+              reductionFactor = Math.min(deathFactor._me, deathFactor._n);
+
+              // Now apply it
+              my.damageRecieved += damage._n * deathFactor._n;
+              n.damageRecieved += damage._me * deathFactor._me;
+            }
+          }
+          /************* DO MOTION ***********/
+          if (nIsFirmCollide < 0) {
+            nIsFirmCollide *= -0.5;
+            my.accel.x -= nIsFirmCollide * component * dir.x;
+            my.accel.y -= nIsFirmCollide * component * dir.y;
+            n.accel.x += nIsFirmCollide * component * dir.x;
+            n.accel.y += nIsFirmCollide * component * dir.y;
+          } else if (nIsFirmCollide > 0) {
+            n.accel.x += nIsFirmCollide * (component * dir.x + combinedDepth.up);
+            n.accel.y += nIsFirmCollide * (component * dir.y + combinedDepth.up);
+          } else {
+            // Calculate the impulse of the collision
+            var elasticity = 2 - 4 * Math.atan(my.penetration * n.penetration) / Math.PI;
+            if (doInelastic && my.settings.motionEffects && n.settings.motionEffects) {
+              elasticity *= savedHealthRatio._me / pen._me.sqrt + savedHealthRatio._n / pen._n.sqrt;
+            } else {
+              elasticity *= 2;
+            }
+            var spring = 2 * Math.sqrt(savedHealthRatio._me * savedHealthRatio._n) / roomSpeed,
+              elasticImpulse = Math.pow(combinedDepth.down, 2) * elasticity * component * my.mass * n.mass / (my.mass + n.mass),
+              springImpulse = c.KNOCKBACK_CONSTANT * spring * combinedDepth.up,
+              impulse = -(elasticImpulse + springImpulse) * (1 - my.intangibility) * (1 - n.intangibility),
+              force = {
+                x: impulse * dir.x,
+                y: impulse * dir.y
+              },
+              modifiers = {
+                _me: c.KNOCKBACK_CONSTANT * my.pushability / my.mass * deathFactor._n,
+                _n: c.KNOCKBACK_CONSTANT * n.pushability / n.mass * deathFactor._me
+              };
+            // Apply impulse as force
+            my.accel.x += modifiers._me * force.x;
+            my.accel.y += modifiers._me * force.y;
+            n.accel.x -= modifiers._n * force.x;
+            n.accel.y -= modifiers._n * force.y;
+          }
+        }
+      }
+    }
+    // The actual collision resolution function
+    return function (collision) {
+      // Pull the two objects from the collision grid      
+      var instance = collision[0],
+        other = collision[1];
+      // Check for ghosts...
+      if (other.isGhost) {
+        util.error('GHOST FOUND');
+        util.error(other.label);
+        util.error('x: ' + other.x + ' y: ' + other.y);
+        util.error(other.collisionArray);
+        util.error('health: ' + other.health.amount);
+        util.warn('Ghost removed.');
+        if (grid.checkIfInHSHG(other)) {
+          util.warn('Ghost removed.');
+          grid.removeObject(other);
+        }
+        return 0;
+      }
+      if (instance.isGhost) {
+        util.error('GHOST FOUND');
+        util.error(instance.label);
+        util.error('x: ' + instance.x + ' y: ' + instance.y);
+        util.error(instance.collisionArray);
+        util.error('health: ' + instance.health.amount);
+        if (grid.checkIfInHSHG(instance)) {
+          util.warn('Ghost removed.');
+          grid.removeObject(instance);
+        }
+        return 0;
+      }
+      if (!instance.activation.check() && !other.activation.check()) {
+        util.warn('Tried to collide with an inactive instance.');
+        return 0;
+      }
+      // Handle walls
+      if (instance.type === 'wall' || other.type === 'wall') {
+        var a = instance.type === 'bullet' || other.type === 'bullet' ? 1 + 10 / (Math.max(instance.velocity.length, other.velocity.length) + 10) : 1;
+        if (instance.type === 'wall') advancedcollide(instance, other, false, false, a);else advancedcollide(other, instance, false, false, a);
+      } else
+        // If they can firm collide, do that
+        if (instance.type === 'crasher' && other.type === 'food' || other.type === 'crasher' && instance.type === 'food') {
+          firmcollide(instance, other);
+        } else
+          // Otherwise, collide normally if they're from different teams
+          if (instance.team !== other.team) {
+            advancedcollide(instance, other, true, true);
+          } else
+            // Ignore them if either has asked to be
+            if (instance.settings.hitsOwnType == 'never' || other.settings.hitsOwnType == 'never') {
+              // Do jack                    
+            } else
+              // Standard collision resolution
+              if (instance.settings.hitsOwnType === other.settings.hitsOwnType) {
+                switch (instance.settings.hitsOwnType) {
+                  case 'push':
+                    advancedcollide(instance, other, false, false);
+                    break;
+                  case 'hard':
+                    firmcollide(instance, other);
+                    break;
+                  case 'hardWithBuffer':
+                    firmcollide(instance, other, 30);
+                    break;
+                  case 'repel':
+                    simplecollide(instance, other);
+                    break;
+                }
+              }
+    };
+  }();
+  // Living stuff
+  function entitiesactivationloop(my) {
+    // Update collisions.
+    my.collisionArray = [];
+    // Activation
+    my.activation.update();
+    my.updateAABB(my.activation.check());
+  }
+  function entitiesliveloop(my) {
+    // Consider death.  
+    if (my.contemplationOfMortality()) my.destroy();else {
+      if (my.bond == null) {
+        // Resolve the physical behavior from the last collision cycle.
+        logs.physics.set();
+        my.physics();
+        logs.physics.mark();
+      }
+      if (my.activation.check()) {
+        logs.entities.tally();
+        // Think about my actions.
+        logs.life.set();
+        my.life();
+        logs.life.mark();
+        // Apply friction.
+        my.friction();
+        my.confinementToTheseEarthlyShackles();
+        logs.selfie.set();
+        my.takeSelfie();
+        logs.selfie.mark();
+      }
+    }
+    // Update collisions.
+    my.collisionArray = [];
+  }
+  var time;
+  // Return the loop function
+  return function () {
+    logs.loops.tally();
+    logs.master.set();
+    logs.activation.set();
+    entities.forEach(function (e) {
+      return entitiesactivationloop(e);
+    });
+    logs.activation.mark();
+    // Do collisions
+    logs.collide.set();
+    if (entities.length > 1) {
+      // Load the grid
+      grid.update();
+      // Run collisions in each grid
+      grid.queryForCollisionPairs().forEach(function (collision) {
+        return collide(collision);
+      });
+    }
+    logs.collide.mark();
+    // Do entities life
+    logs.entities.set();
+    entities.forEach(function (e) {
+      return entitiesliveloop(e);
+    });
+    logs.entities.mark();
+    logs.master.mark();
+    // Remove dead entities
+    purgeEntities();
+    room.lastCycle = util.time();
+  };
+  //let expected = 1000 / c.gameSpeed / 30;
+  //let alphaFactor = (delta > expected) ? expected / delta : 1;
+  //roomSpeed = c.gameSpeed * alphaFactor;
+  //setTimeout(moveloop, 1000 / roomSpeed / 30 - delta); 
+}();
+// A less important loop. Runs at an actual 5Hz regardless of game speed.
+var maintainloop = function () {
+  // Place obstacles
+  function placeRoids() {
+    function placeRoid(type, entityClass) {
+      var x = 0;
+      var position;
+      do {
+        position = room.randomType(type);
+        x++;
+        if (x > 200) {
+          util.warn("Could not place some roids.");
+          return 0;
+        }
+      } while (dirtyCheck(position, 10 + entityClass.SIZE));
+      var o = new Entity(position);
+      o.define(entityClass);
+      o.team = -101;
+      o.facing = ran.randomAngle();
+      o.protect();
+      o.life();
+    }
+    // Start placing them
+    var roidcount = room.roid.length * room.width * room.height / room.xgrid / room.ygrid / 50000 / 1.5;
+    var rockcount = room.rock.length * room.width * room.height / room.xgrid / room.ygrid / 250000 / 1.5;
+    var count = 0;
+    for (var i = Math.ceil(roidcount); i; i--) {
+      count++;
+      placeRoid('roid', Class.obstacle);
+    }
+    for (var _i4 = Math.ceil(roidcount * 0.3); _i4; _i4--) {
+      count++;
+      placeRoid('roid', Class.babyObstacle);
+    }
+    for (var _i5 = Math.ceil(rockcount * 0.8); _i5; _i5--) {
+      count++;
+      placeRoid('rock', Class.obstacle);
+    }
+    for (var _i6 = Math.ceil(rockcount * 0.5); _i6; _i6--) {
+      count++;
+      placeRoid('rock', Class.babyObstacle);
+    }
+    util.log('Placing ' + count + ' obstacles!');
+  }
+  placeRoids();
+  // Spawn Center Dominator
+  (function () {
+    var type = ran.choose([Class.destroydom, Class.gunnerdom, Class.trapdom]);
+    var o = new Entity({
+      x: room.width / 2,
+      y: room.height / 2
+    });
+    o.define(type);
+    o.team = -100;
+    o.color = 3;
+    o.isDominator = true;
+    o.name = 'Dominator';
+    if (type === Class.trapdom) {
+      o.controllers = [new io_spin(o), new io_alwaysFire(o)];
+    } else {
+      o.controllers = [new io_nearestDifferentMaster(o)];
+    }
+    o.life();
+  })();
+  // Spawning functions
+  var spawnBosses = function () {
+    var timer = 0;
+    var boss = function () {
+      var i = 0,
+        names = [],
+        bois = [Class.egg],
+        n = 0,
+        begin = 'yo some shit is about to move to a lower position',
+        arrival = 'Something happened lol u should probably let Neph know this broke',
+        loc = 'norm';
+      var _spawn = function spawn() {
+        var spot,
+          m = 0;
+        do {
+          spot = room.randomType(loc);
+          m++;
+        } while (dirtyCheck(spot, 500) && m < 30);
+        var o = new Entity(spot);
+        o.define(ran.choose(bois));
+        o.team = -100;
+        o.name = names[i++];
+      };
+      return {
+        prepareToSpawn: function prepareToSpawn(classArray, number, nameClass) {
+          var typeOfLocation = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'norm';
+          n = number;
+          bois = classArray;
+          loc = typeOfLocation;
+          names = ran.chooseBossName(nameClass, number);
+          i = 0;
+          if (n === 1) {
+            begin = 'A visitor is coming.';
+            arrival = names[0] + ' has arrived.';
+          } else {
+            begin = 'Visitors are coming.';
+            arrival = '';
+            for (var _i7 = 0; _i7 < n - 2; _i7++) arrival += names[_i7] + ', ';
+            arrival += names[n - 2] + ' and ' + names[n - 1] + ' have arrived.';
+          }
+        },
+        spawn: function spawn() {
+          sockets.broadcast(begin);
+          for (var _i8 = 0; _i8 < n; _i8++) {
+            setTimeout(_spawn, ran.randomRange(3500, 5000));
+          }
+          // Wrap things up.
+          setTimeout(function () {
+            return sockets.broadcast(arrival);
+          }, 5000);
+          util.log('[SPAWN] ' + arrival);
+        }
+      };
+    }();
+    return function (census) {
+      if (timer > 600 && ran.dice(100 - timer)) {
+        util.log('[SPAWN] Preparing to spawn...');
+        timer = 0;
+        var choice = [];
+        switch (ran.chooseChance(2, 1)) {
+          case 0:
+            choice = [[Class.elite_destroyer, Class.elite_gunner, Class.leviAI, Class.demolisherAI], 2, 'a', 'nest'];
+            break;
+          case 1:
+            choice = [[Class.palisadeAI, Class.summonerAI, Class.defenderAI], 1, 'castle', 'norm'];
+            sockets.broadcast('A strange trembling...');
+            break;
+        }
+        boss.prepareToSpawn.apply(boss, _toConsumableArray(choice));
+        setTimeout(boss.spawn, 300);
+        // Set the timeout for the spawn functions
+      } else if (!census.miniboss) timer++;
+    };
+  }();
+  var spawnCrasher = function spawnCrasher(census) {
+    if (ran.chance(1 - 0.5 * census.crasher / room.maxFood / room.nestFoodAmount)) {
+      var spot,
+        i = 30;
+      do {
+        spot = room.randomType('nest');
+        i--;
+        if (!i) return 0;
+      } while (dirtyCheck(spot, 100));
+      var type = ran.dice(80) ? ran.choose([Class.sentryGun, Class.sentrySwarm, Class.sentryTrap, Class.layer,, Class.squaredecimatorlite, Class.eggdecimatorlite, Class.minionkiosksentry, Class.rotorkiosksentry]) : Class.crasher;
+      var o = new Entity(spot);
+      o.define(type);
+      o.team = -100;
+    }
+  };
+  // The NPC function
+  var makenpcs = function () {
+    // Make base protectors if needed.
+    var f = function f(loc, team) {
+      var o = new Entity(loc);
+      o.define(Class.baseProtector);
+      o.team = -team;
+      o.color = [10, 11, 12, 15][team - 1];
+    };
+    var _loop = function _loop(i) {
+      room['bas' + i].forEach(function (loc) {
+        f(loc, i);
+      });
+    };
+    for (var i = 1; i < 5; i++) {
+      _loop(i);
+    }
+    // Return the spawning function
+    var bots = [];
+    return function () {
+      var census = {
+        crasher: 0,
+        miniboss: 0,
+        tank: 0
+      };
+      var npcs = entities.map(function npcCensus(instance) {
+        if (census[instance.type] != null) {
+          census[instance.type]++;
+          return instance;
+        }
+      }).filter(function (e) {
+        return e;
+      });
+      // Spawning
+      spawnCrasher(census);
+      spawnBosses(census);
+      /*/ Bots
+          if (bots.length < c.BOTS) {
+              let o = new Entity(room.random());
+              o.color = 17;
+              o.define(Class.bot);
+              o.define(Class.basic);
+              o.name += ran.chooseBotName();
+              o.refreshBodyAttributes();
+              o.color = 17;
+              bots.push(o);
+          }
+          // Remove dead ones
+          bots = bots.filter(e => { return !e.isDead(); });
+          // Slowly upgrade them
+          bots.forEach(o => {
+              if (o.skill.level < 45) {
+                  o.skill.score += 35;
+                  o.skill.maintain();
+              }
+          });
+      */
+    };
+  }();
+  // The big food function
+  var makefood = function () {
+    var food = [],
+      foodSpawners = [];
+    // The two essential functions
+    function getFoodClass(level) {
+      var a = {};
+      switch (level) {
+        case 0:
+          a = Class.egg;
+          break;
+        case 1:
+          a = Class.square;
+          break;
+        case 2:
+          a = Class.triangle;
+          break;
+        case 3:
+          a = Class.pentagon;
+          break;
+        case 4:
+          a = Class.bigPentagon;
+          break;
+        case 5:
+          a = Class.hugePentagon;
+          break;
+        default:
+          throw 'bad food level';
+      }
+      if (a !== {}) {
+        a.BODY.ACCELERATION = 0.015 / (a.FOOD.LEVEL + 1);
+      }
+      return a;
+    }
+    var placeNewFood = function placeNewFood(position, scatter, level) {
+      var allowInNest = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+      var o = nearest(food, position);
+      var mitosis = false;
+      var seed = false;
+      // Find the nearest food and determine if we can do anything with it
+      if (o != null) {
+        for (var i = 50; i > 0; i--) {
+          if (scatter == -1 || util.getDistance(position, o) < scatter) {
+            if (ran.dice((o.foodLevel + 1) * (o.foodLevel + 1))) {
+              mitosis = true;
+              break;
+            } else {
+              seed = true;
+              break;
+            }
+          }
+        }
+      }
+      // Decide what to do
+      if (scatter != -1 || mitosis || seed) {
+        // Splitting
+        if (o != null && (mitosis || seed) && room.isIn('nest', o) === allowInNest) {
+          var levelToMake = mitosis ? o.foodLevel : level,
+            place = {
+              x: o.x + o.size * Math.cos(o.facing),
+              y: o.y + o.size * Math.sin(o.facing)
+            };
+          var new_o = new Entity(place);
+          new_o.define(getFoodClass(levelToMake));
+          new_o.team = -100;
+          new_o.facing = o.facing + ran.randomRange(Math.PI / 2, Math.PI);
+          food.push(new_o);
+          return new_o;
+        }
+        // Brand new
+        else if (room.isIn('nest', position) === allowInNest) {
+          if (!dirtyCheck(position, 20)) {
+            o = new Entity(position);
+            o.define(getFoodClass(level));
+            o.team = -100;
+            o.facing = ran.randomAngle();
+            food.push(o);
+            return o;
+          }
+        }
+      }
+    };
+    // Define foodspawners
+    var FoodSpawner = /*#__PURE__*/function () {
+      function FoodSpawner() {
+        _classCallCheck(this, FoodSpawner);
+        this.foodToMake = Math.ceil(Math.abs(ran.gauss(0, room.scale.linear * 80)));
+        this.size = Math.sqrt(this.foodToMake) * 25;
+
+        // Determine where we ought to go
+        var position = {};
+        var o;
+        do {
+          position = room.gaussRing(1 / 3, 20);
+          o = placeNewFood(position, this.size, 0);
+        } while (o == null);
+
+        // Produce a few more
+        for (var i = Math.ceil(Math.abs(ran.gauss(0, 4))); i <= 0; i--) {
+          placeNewFood(o, this.size, 0);
+        }
+
+        // Set location
+        this.x = o.x;
+        this.y = o.y;
+        //util.debug('FoodSpawner placed at ('+this.x+', '+this.y+'). Set to produce '+this.foodToMake+' food.');
+      }
+      return _createClass(FoodSpawner, [{
+        key: "rot",
+        value: function rot() {
+          if (--this.foodToMake < 0) {
+            //util.debug('FoodSpawner rotted, respawning.');
+            util.remove(foodSpawners, foodSpawners.indexOf(this));
+            foodSpawners.push(new FoodSpawner());
+          }
+        }
+      }]);
+    }(); // Add them
+    foodSpawners.push(new FoodSpawner());
+    foodSpawners.push(new FoodSpawner());
+    foodSpawners.push(new FoodSpawner());
+    foodSpawners.push(new FoodSpawner());
+    // Food making functions 
+    var makeGroupedFood = function makeGroupedFood() {
+      // Create grouped food
+      // Choose a location around a spawner
+      var spawner = foodSpawners[ran.irandom(foodSpawners.length - 1)],
+        bubble = ran.gaussRing(spawner.size, 1 / 4);
+      placeNewFood({
+        x: spawner.x + bubble.x,
+        y: spawner.y + bubble.y
+      }, -1, 0);
+      spawner.rot();
+    };
+    var makeDistributedFood = function makeDistributedFood() {
+      // Distribute food everywhere
+      //util.debug('Creating new distributed food.');
+      var spot = {};
+      do {
+        spot = room.gaussRing(1 / 2, 2);
+      } while (!room.isInNorm(spot));
+      placeNewFood(spot, 0.01 * room.width, 0);
+    };
+    var makeCornerFood = function makeCornerFood() {
+      // Distribute food in the corners
+      var spot = {};
+      do {
+        spot = room.gaussInverse(5);
+      } while (!room.isInNorm(spot));
+      placeNewFood(spot, 0.05 * room.width, 0);
+    };
+    var makeNestFood = function makeNestFood() {
+      // Make nest pentagons
+      var spot = room.randomType('nest');
+      placeNewFood(spot, 0.01 * room.width, 3, true);
+    };
+    // Return the full function
+    return function () {
+      // Find and understand all food
+      var census = _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty({}, 0, 0), 1, 0), 2, 0), 3, 0), 4, 0), 5, 0), 6, 0), "tank", 0), "sum", 0);
+      var censusNest = _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty({}, 0, 0), 1, 0), 2, 0), 3, 0), 4, 0), 5, 0), 6, 0), "sum", 0);
+      // Do the censusNest
+      food = entities.map(function (instance) {
+        try {
+          if (instance.type === 'tank') {
+            census.tank++;
+          } else if (instance.foodLevel > -1) {
+            if (room.isIn('nest', {
+              x: instance.x,
+              y: instance.y
+            })) {
+              censusNest.sum++;
+              censusNest[instance.foodLevel]++;
+            } else {
+              census.sum++;
+              census[instance.foodLevel]++;
+            }
+            return instance;
+          }
+        } catch (err) {
+          util.error(instance.label);
+          util.error(err);
+          instance.kill();
+        }
+      }).filter(function (e) {
+        return e;
+      });
+      // Sum it up   
+      var maxFood = 1 + room.maxFood + 15 * census.tank;
+      var maxNestFood = 1 + room.maxFood * room.nestFoodAmount;
+      var foodAmount = census.sum;
+      var nestFoodAmount = censusNest.sum;
+      /*********** ROT OLD SPAWNERS **********/
+      foodSpawners.forEach(function (spawner) {
+        if (ran.chance(1 - foodAmount / maxFood)) spawner.rot();
+      });
+      /************** MAKE FOOD **************/
+      while (ran.chance(0.8 * (1 - foodAmount * foodAmount / maxFood / maxFood))) {
+        switch (ran.chooseChance(10, 2, 1)) {
+          case 0:
+            makeGroupedFood();
+            break;
+          case 1:
+            makeDistributedFood();
+            break;
+          case 2:
+            makeCornerFood();
+            break;
+        }
+      }
+      while (ran.chance(0.5 * (1 - nestFoodAmount * nestFoodAmount / maxNestFood / maxNestFood))) makeNestFood();
+      /************* UPGRADE FOOD ************/
+      if (!food.length) return 0;
+      for (var i = Math.ceil(food.length / 100); i > 0; i--) {
+        var o = food[ran.irandom(food.length - 1)],
+          // A random food instance
+          oldId = -1000,
+          overflow = void 0,
+          location = void 0;
+        // Bounce 6 times
+        for (var j = 0; j < 6; j++) {
+          overflow = 10;
+          // Find the nearest one that's not the last one
+          do {
+            o = nearest(food, {
+              x: ran.gauss(o.x, 30),
+              y: ran.gauss(o.y, 30)
+            });
+          } while (o.id === oldId && --overflow);
+          if (!overflow) continue;
+          // Configure for the nest if needed
+          var proportions = c.FOOD,
+            cens = census,
+            amount = foodAmount;
+          if (room.isIn('nest', o)) {
+            proportions = c.FOOD_NEST;
+            cens = censusNest;
+            amount = nestFoodAmount;
+          }
+          // Upgrade stuff
+          o.foodCountup += Math.ceil(Math.abs(ran.gauss(0, 10)));
+          while (o.foodCountup >= (o.foodLevel + 1) * 100) {
+            o.foodCountup -= (o.foodLevel + 1) * 100;
+            if (ran.chance(1 - cens[o.foodLevel + 1] / amount / proportions[o.foodLevel + 1])) {
+              o.define(getFoodClass(o.foodLevel + 1));
+            }
+          }
+        }
+      }
+    };
+  }();
+  // Define food and food spawning
+  return function () {
+    // Do stuff
+    makenpcs();
+    makefood();
+    // Regen health and update the grid
+    entities.forEach(function (instance) {
+      if (instance.shield.max) {
+        instance.shield.regenerate();
+      }
+      if (instance.health.amount) {
+        instance.health.regenerate(instance.shield.max && instance.shield.max === instance.shield.amount);
+      }
+    });
+  };
+}();
+// This is the checking loop. Runs at 1Hz.
+var speedcheckloop = function () {
+  var fails = 0;
+  // Return the function
+  return function () {
+    var activationtime = logs.activation.sum(),
+      collidetime = logs.collide.sum(),
+      movetime = logs.entities.sum(),
+      playertime = logs.network.sum(),
+      maptime = logs.minimap.sum(),
+      physicstime = logs.physics.sum(),
+      lifetime = logs.life.sum(),
+      selfietime = logs.selfie.sum();
+    var sum = logs.master.record();
+    var loops = logs.loops.count(),
+      active = logs.entities.count();
+    global.fps = (1000 / sum).toFixed(2);
+    if (sum > 1000 / roomSpeed / 30) {
+      //fails++;
+      util.warn('~~ LOOPS: ' + loops + '. ENTITY #: ' + entities.length + '//' + Math.round(active / loops) + '. VIEW #: ' + views.length + '. BACKLOGGED :: ' + (sum * roomSpeed * 3).toFixed(3) + '%! ~~');
+      util.warn('Total activation time: ' + activationtime);
+      util.warn('Total collision time: ' + collidetime);
+      util.warn('Total cycle time: ' + movetime);
+      util.warn('Total player update time: ' + playertime);
+      util.warn('Total lb+minimap processing time: ' + maptime);
+      util.warn('Total entity physics calculation time: ' + physicstime);
+      util.warn('Total entity life+thought cycle time: ' + lifetime);
+      util.warn('Total entity selfie-taking time: ' + selfietime);
+      util.warn('Total time: ' + (activationtime + collidetime + movetime + playertime + maptime + physicstime + lifetime + selfietime));
+      if (fails > 60) {
+        util.error("FAILURE!");
+        //process.exit(1);
+      }
+    } else {
+      fails = 0;
+    }
+  };
+}();
+
+/** BUILD THE SERVERS **/
+// Turn the server on
+var server = http.createServer(app);
+if (c.servesStatic) {
+  app.use(express["static"](__dirname + '/../client'));
+  app.get('/', function (req, res) {
+    res.sendFile(path.resolve(__dirname + '/../client/index.html'));
+  });
+}
+var websockets = new WebSocket.Server({
+  server: server
+});
+websockets.on('connection', sockets.connect);
+var PORT = process.env.PORT || 4005;
+server.listen(PORT, "0.0.0.0", function () {
+  console.log("Server running on", PORT);
+});
+
+// Bring it to life
+setInterval(gameloop, room.cycleSpeed);
+setInterval(maintainloop, 200);
+//setInterval(speedcheckloop, 1000);
+
+// Periodically clear all food on the map every 3 minutes and announce in chat
+setInterval(function () {
+  try {
+    var removed = 0;
+    entities.forEach(function (e) {
+      if (e && e.type === 'food') {
+        e.kill();
+        removed++;
+      }
+    });
+    // Announce to players
+    sockets.broadcastChat('Server', 'All Food Deleted!');
+    util.log("[INFO] Periodic food clear executed. Removed: ".concat(removed));
+  } catch (err) {
+    util.error('Food clear task error: ' + (err === null || err === void 0 ? void 0 : err.message));
+  }
+}, 180000);
+
+// Graceful shutdown
+var shutdownWarning = false;
+if (process.platform === "win32") {
+  var rl = require("readline").createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+  rl.on("SIGINT", function () {
+    process.emit("SIGINT");
+  });
+}
+process.on("SIGINT", function () {
+  if (!shutdownWarning) {
+    shutdownWarning = true;
+    sockets.broadcast("The server is shutting down.");
+    util.log('Server going down! Warning broadcasted.');
+    setTimeout(function () {
+      sockets.broadcast("Arena closed.");
+      util.log('Final warning broadcasted.');
+      setTimeout(function () {
+        util.warn('Process ended.');
+        process.exit();
+      }, 3000);
+    }, 17000);
+  }
+});
