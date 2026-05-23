@@ -1,0 +1,15 @@
+11:02:31.913 WARN  Chat spam: too fast Kicking. 1 warning. 
+11:02:32.177 WARN  Chat spam: too fast Kicking. 2 warnings. 
+11:02:32.425 WARN  Chat spam: too fast Kicking. 3 warnings. 
+11:02:32.707 WARN  Chat spam: too fast Kicking. 4 warnings. 
+11:02:38.546 WARN  Malformed command packet. Kicking. 1 warning. 
+11:05:24.185 WARN  Chat spam: too fast Kicking. 1 warning. 
+11:05:24.517 WARN  Chat spam: too fast Kicking. 2 warnings. 
+11:05:24.769 WARN  Chat spam: too fast Kicking. 3 warnings. 
+11:05:25.072 WARN  Chat spam: too fast Kicking. 4 warnings. 
+11:33:10.765 ERROR Egg 
+11:33:10.765 ERROR InvalidPositionError 
+15:33:39.652 WARN  Chat spam: too fast Kicking. 1 warning. 
+16:32:03.148 WARN  Malformed command packet. Kicking. 1 warning. 
+16:32:27.555 WARN  Malformed command packet. Kicking. 1 warning. 
+18:19:51.416 WARN  Malformed command packet. Kicking. 1 warning. 

@@ -1,0 +1,56 @@
+{
+  "name": "arras-io",
+  "version": "1.0.0",
+  "description": "A fanmade sequel to diep.io",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "export NODE_OPTIONS=--openssl-legacy-provider && gulp run",
+    "build": "export NODE_OPTIONS=--openssl-legacy-provider && gulp build"
+  },
+  "author": "Anthony Hengst",
+  "license": "GNU GPL3",
+  "contributors": [
+    "nepphhhh <nephdev@gmail.com>"
+  ],
+  "dependencies": {
+    "@babel/core": "^7.0.0",
+    "@babel/preset-env": "^7.0.0",
+    "babel-loader": "^8.0.0",
+    "chai": "^3.5.0",
+    "express": "^4.13.4",
+    "fs": "^0.0.2",
+    "google-closure-library": "^20170910.0.0",
+    "graceful-fs": "^4.2.11",
+    "gulp": "^4.0.2",
+    "gulp-babel": "^8.0.0",
+    "gulp-jshint": "^2.1.0",
+    "gulp-mocha": "^8.0.0",
+    "gulp-nodemon": "^2.5.0",
+    "gulp-rev": "^9.0.0",
+    "gulp-rev-dist-clean": "^1.0.4",
+    "gulp-rev-replace": "^0.4.4",
+    "gulp-todo": "^7.1.0",
+    "gulp-uglify": "^3.0.2",
+    "gulp-util": "^3.0.8",
+    "jshint": "^2.9.2",
+    "keypress": "^0.2.1",
+    "mocha": "^2.5.3",
+    "mysql": "^2.5.5",
+    "nodemon": "^1.9.2",
+    "paper": "^0.11.5",
+    "rev-del": "^1.0.5",
+    "rimraf": "^2.6.2",
+    "sat": "^0.6.0",
+    "schema-utils": "1.0.0",
+    "seedrandom": "^2.4.3",
+    "simple-node-logger": "^0.93.33",
+    "simple-quadtree": "^0.1.3",
+    "webpack": "4.46.0",
+    "webpack-cli": "3.3.12",
+    "webpack-stream": "5.2.1",
+    "ws": "^3.3.2"
+  },
+  "devDependencies": {
+    "babel-core": "^7.0.0-bridge.0"
+  }
+}

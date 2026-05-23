@@ -1,0 +1,25 @@
+11:05:03.591 WARN  Malformed command packet. Kicking. 1 warning. 
+12:29:14.858 WARN  Malformed command packet. Kicking. 1 warning. 
+13:44:16.246 ERROR Fork Egg 
+13:44:16.246 ERROR InvalidPositionError 
+13:44:16.246 ERROR Fork Egg 
+13:44:16.246 ERROR InvalidPositionError 
+13:44:16.246 ERROR Fork Egg 
+13:44:16.246 ERROR InvalidPositionError 
+13:44:16.246 ERROR Fork Egg 
+13:44:16.246 ERROR InvalidPositionError 
+13:44:16.246 ERROR Fork Egg 
+13:44:16.246 ERROR InvalidPositionError 
+13:44:16.246 ERROR Fork Egg 
+13:44:16.246 ERROR InvalidPositionError 
+13:44:16.246 ERROR Cyclone Egg 
+13:44:16.246 ERROR InvalidPositionError 
+14:37:13.573 ERROR Hexagon Decimator Egg 
+14:37:13.573 ERROR InvalidPositionError 
+14:59:09.251 ERROR Hexagon Decimator Egg 
+14:59:09.251 ERROR InvalidPositionError 
+14:59:09.252 ERROR Pentagon 
+14:59:09.252 ERROR InvalidPositionError 
+17:26:28.181 ERROR read ECONNRESET
+Error: read ECONNRESET
+    at TCP.onStreamRead (node:internal/stream_base_commons:218:20) 
