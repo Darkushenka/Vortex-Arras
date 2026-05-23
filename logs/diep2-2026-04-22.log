@@ -1,0 +1,12 @@
+14:33:04.972 WARN  Malformed command packet. Kicking. 1 warning. 
+14:33:05.019 WARN  Malformed command packet. Kicking. 2 warnings. 
+14:33:05.035 WARN  Malformed command packet. Kicking. 3 warnings. 
+14:33:05.052 WARN  Malformed command packet. Kicking. 4 warnings. 
+14:33:05.069 WARN  Malformed command packet. Kicking. 5 warnings. 
+14:33:05.070 WARN  194.85.239.233, 10.82.1.45, 127.0.0.1 banned! 
+16:33:44.071 ERROR Egg 
+16:33:44.071 ERROR InvalidPositionError 
+16:33:44.071 ERROR Egg 
+16:33:44.071 ERROR InvalidPositionError 
+16:33:44.071 ERROR Egg 
+16:33:44.071 ERROR InvalidPositionError 
